@@ -1,0 +1,21 @@
+
+/* Class = "UIButton"; configuration.title = "Login In"; ObjectID = "0FC-ad-qHs"; */
+"0FC-ad-qHs.configuration.title" = "Login In";
+
+/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "0FC-ad-qHs"; */
+"0FC-ad-qHs.normalTitle" = "Button";
+
+/* Class = "UITextField"; placeholder = "Country Code"; ObjectID = "2O1-9d-Rrr"; */
+"2O1-9d-Rrr.placeholder" = "Country Code";
+
+/* Class = "UITextField"; placeholder = "Password or Verification Code"; ObjectID = "4jW-hF-B6b"; */
+"4jW-hF-B6b.placeholder" = "Password or Verification Code";
+
+/* Class = "UITextField"; placeholder = "Email Address or Phone Number"; ObjectID = "5QH-Zh-M8m"; */
+"5QH-Zh-M8m.placeholder" = "Email Address or Phone Number";
+
+/* Class = "UIButton"; configuration.title = "Send Verification Code"; ObjectID = "r4W-U1-qIv"; */
+"r4W-U1-qIv.configuration.title" = "Send Verification Code";
+
+/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "r4W-U1-qIv"; */
+"r4W-U1-qIv.normalTitle" = "Button";

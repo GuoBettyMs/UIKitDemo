@@ -1,0 +1,8 @@
+//
+//  Localizable.strings
+//  SwiftTest
+//
+//  Created by user on 12/9/24.
+//
+
+"Hello" = "Greeting";

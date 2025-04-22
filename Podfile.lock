@@ -1,0 +1,66 @@
+PODS:
+  - AAInfographics (6.0.0)
+  - Alamofire (5.6.4)
+  - Kingfisher (7.12.0)
+  - MBProgressHUD (1.2.0)
+  - NVActivityIndicatorView (5.2.0):
+    - NVActivityIndicatorView/Base (= 5.2.0)
+  - NVActivityIndicatorView/Base (5.2.0)
+  - RxCocoa (6.5.0):
+    - RxRelay (= 6.5.0)
+    - RxSwift (= 6.5.0)
+  - RxRelay (6.5.0):
+    - RxSwift (= 6.5.0)
+  - RxSwift (6.5.0)
+  - SideMenu (6.5.0)
+  - SnapKit (5.6.0)
+  - SQLite.swift (0.13.3):
+    - SQLite.swift/standard (= 0.13.3)
+  - SQLite.swift/standard (0.13.3)
+  - SwiftyJSON (5.0.2)
+
+DEPENDENCIES:
+  - AAInfographics (~> 6.0.0)
+  - Alamofire (~> 5.6.2)
+  - Kingfisher
+  - MBProgressHUD (~> 1.2.0)
+  - NVActivityIndicatorView
+  - RxCocoa (~> 6.5.0)
+  - RxSwift (~> 6.5.0)
+  - SideMenu (~> 6.0)
+  - SnapKit (~> 5.6.0)
+  - SQLite.swift (~> 0.13.3)
+  - SwiftyJSON (~> 5.0.1)
+
+SPEC REPOS:
+  trunk:
+    - AAInfographics
+    - Alamofire
+    - Kingfisher
+    - MBProgressHUD
+    - NVActivityIndicatorView
+    - RxCocoa
+    - RxRelay
+    - RxSwift
+    - SideMenu
+    - SnapKit
+    - SQLite.swift
+    - SwiftyJSON
+
+SPEC CHECKSUMS:
+  AAInfographics: e57c6cc15ddc17df3555db6f586fb0e1b911a0b7
+  Alamofire: 4e95d97098eacb88856099c4fc79b526a299e48c
+  Kingfisher: 53a10ea35051a436b5fb626ca2dd8f3144d755e9
+  MBProgressHUD: 3ee5efcc380f6a79a7cc9b363dd669c5e1ae7406
+  NVActivityIndicatorView: fe52a6a68664c2df8991d7d9e3d86d8d19453c53
+  RxCocoa: 94f817b71c07517321eb4f9ad299112ca8af743b
+  RxRelay: 1de1523e604c72b6c68feadedd1af3b1b4d0ecbd
+  RxSwift: 5710a9e6b17f3c3d6e40d6e559b9fa1e813b2ef8
+  SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+  SQLite.swift: 903bfa3bc9ab06345fdfbb578e34f47cfcf417da
+  SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
+
+PODFILE CHECKSUM: c5ebb9d62399cc49704a4216056ae4527417c48b
+
+COCOAPODS: 1.15.2
