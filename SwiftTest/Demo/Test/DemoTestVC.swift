@@ -48,15 +48,24 @@ class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UI
             container.demo_circularProgressV()
             
         case 3:
-            break
+            let view = UIView()
+            self.view.addSubview(view)
+            view.snp.makeConstraints { make in
+                make.width.height.equalTo(200)
+                make.center.equalToSuperview()
+            }
+            view.backgroundColor = .white
+            view.addCorner(corners: [UIRectCorner.topRight, UIRectCorner.topLeft], radius: 20)
             
         case 4:
+            
             setuptimeZonePickerData()
             
         default: break
         }
         
     }
+
 
     //MARK: - Actions
     //MARK: frameAndBouonds
@@ -285,10 +294,17 @@ class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UI
             
             if completed {
                 print("Sharing succeeded")
-                Alert.showBasicAlert(on: self, with: "", message: "Sharing succeeded")
+                CustomAlert.showToast(title: "Sharing succeeded", vc: self)
             } else {
                 print("Sharing was cancelled")
-                Alert.showBasicAlert(on: self, with: "", message: "Sharing was cancelled")
+                CustomAlert.showAdaptiveAlert(
+                    on: self,
+                    with: "Sharing was cancelled",
+                    actions: [
+                        UIAlertAction(title: "确认", style: .default) { _ in },
+                        UIAlertAction(title: "知道了", style: .destructive)
+                    ]
+                )
             }
         }
         
@@ -317,7 +333,7 @@ class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UI
         let selectedTimeZone = model.timeZoneData[row]//"America/Los_Angeles"/
         print("Selected: \(row), \(selectedTimeZone), \(TimeZone.current.identifier)")
         
-        getNetWorkTime(
+        CustomSystemTime.getNetWorkTime(
             urlString: timeAPIURL.absoluteString,
             isFollowSystem: false ,
             timeZoneIden: selectedTimeZone
@@ -329,6 +345,39 @@ class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UI
             服务器时间转换成所选时区后: \(times.convertedTime)
             """
             self.container.setupTimeZoneLabel(str)
+            
+            //  解析系统时间到CustomSystemTime
+            if let systemTime = CustomSystemTime.create(from: .dateSring(times.systemTime, .current)){
+                print("解析后的时间对象：")
+//                print(systemTime.description)
+                print("本地时间：\(systemTime.year)-\(systemTime.month)-\(systemTime.day),\(systemTime.hour):\(systemTime.minute)")//本地时间：2025-5-16,15:9
+                print("formattedDateTime: ",systemTime.formattedDateTime)//2025-05-16 15:09:39.000
+                print("时区偏移",systemTime.timezoneOffset) //时区偏移 8
+                // 格式转换
+                let intArray = systemTime.toIntArray()  //[1, 15, 9, 39, 0, 2025, 5, 16, 5, 8]
+                print("\(intArray)")
+                
+            } else {
+                print("无法解析时间字符串")
+            }
+
+            
+            if let nyTime = CustomSystemTime.create(from: .now("America/New_York")){
+                print("纽约当前时间：\(nyTime.hour):\(nyTime.minute)")//纽约当前时间：15:9
+                print("时区偏移：GMT\(nyTime.timezoneOffset)")//时区偏移：GMT-4
+            }
+            if let localTime = CustomSystemTime.create(from: .dateSring(times.systemTime, TimeZone(identifier: "GMT")!)){
+                print("GMT 时间：\(localTime.year)-\(localTime.month)-\(localTime.day),\(localTime.hour):\(localTime.minute)")//GMT 时间：2025-5-16,23:9
+                print("formattedDateTime: ",localTime.formattedDateTime)//2025-05-16 23:09:39.000
+                print("时区偏移: ",localTime.timezoneOffset)// 时区偏移 0
+            }
+            
+            
+            // 时间格式化
+            let t = TimeFormatter.string(from: 3665)          // "01:01:05"
+            let t1 = TimeFormatter.string(from: 125, style: .hoursMinutes)  // "02:05"
+            print(t)
+            print(t1)
         }
     }
 

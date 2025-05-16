@@ -54,7 +54,8 @@ extension Float {
 }
 
 extension Double {
-    func formatted(decimalPlaces: Int = 2) -> String {
+    //多余小数会四舍五入，不足不补零（如 1.5 格式化为 1.50 需手动处理）
+    func formatted(decimalPlaces: Int = 1) -> String {
         let format = "%.\(decimalPlaces)f"
         return String(format: format, self)
     }
@@ -120,6 +121,21 @@ extension UIViewController {
 
 }
 
+//MARK: -
+extension UIView {
+    func addCorner(corners: UIRectCorner, radius: CGFloat) {
+        // 确保在下次布局周期执行
+        DispatchQueue.main.async {
+            let path = UIBezierPath(
+                roundedRect: self.bounds,
+                byRoundingCorners: corners,
+                cornerRadii: CGSize(width: radius, height: radius))
+            let mask = CAShapeLayer()
+            mask.path = path.cgPath
+            self.layer.mask = mask
+        }
+    }
+}
 //MARK: -
 extension UIButton{
     

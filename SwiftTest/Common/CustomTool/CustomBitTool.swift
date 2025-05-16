@@ -6,7 +6,10 @@
 //
 //  自定义位操作工具
 
-class CustomBitTool{
+struct CustomBitTool{
+    
+    private init() {}  // 防止外部实例化
+    
     // MARK: - 位操作工具集
     /// 将位数组组合成整数
     /// - Parameters:

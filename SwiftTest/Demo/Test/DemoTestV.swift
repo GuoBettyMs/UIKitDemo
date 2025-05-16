@@ -57,12 +57,14 @@ class DemoTestV: BaseV {
         parentV.frame = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         parentV.bounds = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         parentV.backgroundColor = .random().withAlphaComponent(0.5)
+        parentV.addCorner(corners: .topRight, radius: 20)
 
         childV = UIView()
         contentView.addSubview(childV)
         childV.bounds = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         childV.frame = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         childV.backgroundColor = .random().withAlphaComponent(0.5)
+        childV.addCorner(corners: .bottomRight, radius: 20)
         
         contentView.addSubview(rectResultL)
         rectResultL.textColor = .black

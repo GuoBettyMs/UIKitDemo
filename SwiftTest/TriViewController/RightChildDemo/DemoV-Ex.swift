@@ -210,7 +210,7 @@ extension DemoV: UIPickerViewDataSource{
         let selectedTimeZone = timeZoneData[row]
         print("Selected: \(row), \(selectedTimeZone), \(TimeZone.current.identifier)")
         
-        getNetWorkTime(
+        CustomSystemTime.getNetWorkTime(
             urlString: timeAPIURL.absoluteString,
             isFollowSystem: false ,
             timeZoneIden: timeZoneData[row]

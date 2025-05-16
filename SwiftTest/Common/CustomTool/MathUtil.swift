@@ -7,10 +7,12 @@
 
 import Foundation
 
-class MathUtil {
+struct MathUtil {
+    
+    private init() {}  // 防止外部实例化,不允许 MathUtil()
     
     // MARK: - Number Formatting
-        
+    //多余小数会四舍五入，不足会补零（如 1.5 自动格式化为 1.50 ）,根据设备/指定地区显示数字格式（如欧美用 1,234.56，部分欧洲用 1 234,56）
     static func format(double: Double, decimalPlaces accuracy: Int, locale: Locale = .current) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -113,23 +115,23 @@ class MathUtil {
         //MathUtil
         // Formatting
         let formatted = MathUtil.format(double: 1234.5678, decimalPlaces: 2)
-        print("Formatting: \(formatted)\n")
+        print("Formatting: \(formatted)\n") //Formatting: 1,234.57
         
         // Filtering
         let intValue = MathUtil.filteredInt(from: "abc123def")
         let doubleValue = MathUtil.filteredDouble(from: "12.34abc")
-        print("Filtering: intValue(\(intValue)), doubleValue(\(doubleValue))\n")
+        print("Filtering: intValue(\(intValue)), doubleValue(\(doubleValue))\n") //Filtering: intValue(123), doubleValue(12.34)
         
         // Data conversion
         let data = Data([0x12, 0x34, 0x56, 0x78])
         let littleEndian = MathUtil.littleEndianUInt32(from: data)
         let bigEndian = MathUtil.bigEndianUInt32(from: data)
-        print("Data conversion: littleEndian(\(littleEndian)), bigEndian(\(bigEndian))\n")
+        print("Data conversion: littleEndian(\(littleEndian)), bigEndian(\(bigEndian))\n") //Data conversion: littleEndian(2018915346), bigEndian(305419896)
         
         //manipulation
         let littleEndianManual = MathUtil.littleEndianUInt32Manual(from: data)
         let bigEndianManual = MathUtil.bigEndianUInt32Manual(from: data)
-        print("manipulation: littleEndianManual(\(littleEndianManual)), bigEndianManual(\(bigEndianManual))\n")
+        print("manipulation: littleEndianManual(\(littleEndianManual)), bigEndianManual(\(bigEndianManual))\n") //manipulation: littleEndianManual(2018915346), bigEndianManual(305419896)
         
         //Data 
         var x = 5, y = 10

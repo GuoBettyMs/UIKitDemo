@@ -15,19 +15,47 @@
 
 import Foundation
 
-struct CustomSystemTime {
-    let is24HourFormat: Bool
-    let hour: Int
-    let minute: Int
-    let second: Int
-    let millisecond: Int
-    let year: Int
-    let month: Int
-    let day: Int
-    let weekday: Int // 1=周一, 2=周二,..., 7=周日
-    let timezoneOffset: Int // 时区偏移(小时)
+/// 表示系统时间的值类型，封装日期时间相关数据
+public struct CustomSystemTime {
+    // MARK: - 时间属性
+    public let is24HourFormat: Bool
+    public let hour: Int
+    public let minute: Int
+    public let second: Int
+    public let millisecond: Int
+    public let year: Int
+    public let month: Int
+    public let day: Int
+    public let weekday: Weekday // 1=周一, 2=周二,..., 7=周日
+    public let timezoneOffset: Int // 时区偏移(小时)
     
-    var description: String {
+    // MARK: - 初始化方法
+    public init(
+        is24HourFormat: Bool,
+        hour: Int,
+        minute: Int,
+        second: Int,
+        millisecond: Int,
+        year: Int,
+        month: Int,
+        day: Int,
+        weekday: Weekday,
+        timezoneOffset: Int
+    ) {
+        self.is24HourFormat = is24HourFormat
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+        self.millisecond = millisecond
+        self.year = year
+        self.month = month
+        self.day = day
+        self.weekday = weekday
+        self.timezoneOffset = timezoneOffset
+    }
+    
+    // MARK: - 派生属性
+    public var description: String {
         return """
         时间格式: \(is24HourFormat ? "24小时制" : "12小时制")
         时间: \(year)-\(month)-\(day) \(hour):\(minute):\(second).\(millisecond)
@@ -36,7 +64,13 @@ struct CustomSystemTime {
         """
     }
     
-    func toIntArray() -> [Int] {
+    public var formattedDateTime: String {
+        String(format: "%04d-%02d-%02d %02d:%02d:%02d.%03d",
+               year, month, day, hour, minute, second, millisecond)
+    }
+    
+    // MARK: - 数据转换
+    public func toIntArray() -> [Int] {
         return [
             is24HourFormat ? 1 : 0,  // 时间格式标志 (1=24小时制, 0=12小时制)
             hour,                     // 小时
@@ -46,161 +80,218 @@ struct CustomSystemTime {
             year,                     // 年
             month,                    // 月
             day,                      // 日
-            weekday,                  // 星期 (1=周一,...,7=周日)
+            weekday.rawValue,         // 星期 (1=周一,...,7=周日)
             timezoneOffset            // 与 GMT 时区偏移多少 (小时)
         ]
     }
+    
 }
 
-enum TimeFormat {
-    case hoursMinutesSeconds    // HH:mm:ss
-    case hoursMinutes          // HH:mm
-}
-
-///- Returns:
-/// 根据本地系统的日历设置格式,获取本地系统时间
-/// 返回: CustomSystemTime
-func getSystemTimeForCalendar() -> CustomSystemTime? {
-    let calendar = Calendar.current
-    let now = Date()
-    
-    // 获取日期组件
-    let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second, .nanosecond, .weekday, .timeZone], from: now)
-    
-    // 安全解包必要组件
-    guard let year = components.year,
-          let month = components.month,
-          let day = components.day,
-          let hour = components.hour,
-          let minute = components.minute,
-          let second = components.second,
-          let nanosecond = components.nanosecond,
-          let weekday = components.weekday,
-          let timeZone = components.timeZone else {
-        return nil
+// MARK: - 嵌套类型
+extension CustomSystemTime {
+    /// 星期枚举（类型安全）
+    public enum Weekday: Int, CaseIterable {
+        case monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday
+        
+        public var localizedString: String {
+            switch self {
+            case .monday: return "周一"
+            case .tuesday: return "周二"
+            case .wednesday: return "周三"
+            case .thursday: return "周四"
+            case .friday: return "周五"
+            case .saturday: return "周六"
+            case .sunday: return "周日"
+            }
+        }
     }
     
-    // 计算毫秒
-    let millisecond = nanosecond / 1_000_000
-    
-    // 调整星期表示 (1=周日 -> 1=周一, 7=周日)
-    let adjustedWeekday = weekday == 1 ? 7 : weekday - 1
-    
-    // 计算时区偏移(小时)
-    let timezoneOffset = timeZone.secondsFromGMT() / 3600
-    
-    return CustomSystemTime(
-        is24HourFormat: Locale.current.uses24HourTimeFormat,
-        hour: hour,
-        minute: minute,
-        second: second,
-        millisecond: millisecond,
-        year: year,
-        month: month,
-        day: day,
-        weekday: adjustedWeekday,
-        timezoneOffset: timezoneOffset
-    )
+    public enum TimeInput {
+        case now(String)
+        case dateSring(String, TimeZone)
+    }
 }
+// MARK: - 嵌套工具类方法
+extension CustomSystemTime {
 
-/// - Returns:
-///  根据时区 string ,获取指定时区时间
-///  返回: 字符串
-func getSystemTime(forTimeZone identifier: String = "Asia/Shanghai") -> String{
-    let formatter:DateFormatter = DateFormatter()
-    formatter.timeZone = TimeZone(identifier: identifier)
-    formatter.dateFormat = Locale.current.uses24HourTimeFormat ? "yy-MM-dd a E z HH:mm:ss.SSS" : "yy-MM-dd a E z hh:mm:ss.SSS"// 设置日期格式，以字符串表示的日期形式的格式
-
-    return formatter.string(from: Date())
-}
-
-///- Returns:
-/// 根据 urlString, 获取服务器上的网络时间(24小时制),  并根据自身要求转为指定时区时间
-/// 返回 completion : selectedTime: 选定时区的本地时间, systemTime: 系统本地时间, serverTime: 服务器时间, convertedTime: 服务器时间转换成所选时区
-func getNetWorkTime(
-    urlString: String,
-    isFollowSystem: Bool = true,
-    timeZoneIden: String = "Asia/Shanghai",
-    completion: @escaping ((selectedTime: String, systemTime: String, serverTime: String, convertedTime: String)) -> Void
-) {
-    // 1. 先获取当前系统时间
-    let systemFormatter = DateFormatter()
-    systemFormatter.timeZone = TimeZone.current
-    systemFormatter.dateStyle = .medium
-    systemFormatter.timeStyle = .medium
-    let systemTime = systemFormatter.string(from: Date())
-    
-    // 2. 创建网络请求
-    guard let url = URL(string: urlString) else {
-        print("Invalid URL")
-        return
+    /// 统一入口（根据输入类型自动选择方法）
+    static func create(from input: TimeInput) -> CustomSystemTime? {
+        switch input {
+        case .now(let tzIden):
+            return getSystemTime(forTimeZone: tzIden)
+        case .dateSring(let str, let tz):
+            return from(dateString: str, timeZone: tz)
+        }
     }
     
-    let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-        if let error = error {
-            print("Network error: \(error.localizedDescription)")
+    ///- Returns:
+    /// 根据 urlString, 获取服务器上的网络时间(24小时制),  并根据自身要求转为指定时区时间
+    /// 返回 completion : selectedTime: 选定时区的本地时间, systemTime: 系统本地时间, serverTime: 服务器时间, convertedTime: 服务器时间转换成所选时区
+    ///  增加 static 关键字,表明该方法属于工具类方法,不依赖结构体的任何实例属性（如 hour、year 等）
+    static func getNetWorkTime(
+        urlString: String,
+        isFollowSystem: Bool = true,
+        timeZoneIden: String = "Asia/Shanghai",
+        completion: @escaping ((selectedTime: String, systemTime: String, serverTime: String, convertedTime: String)) -> Void
+    ) {
+        // 1. 先获取当前系统时间
+        let systemFormatter = DateFormatter()
+        systemFormatter.timeZone = TimeZone.current
+        systemFormatter.dateStyle = .medium
+        systemFormatter.timeStyle = .medium
+        let systemTime = systemFormatter.string(from: Date())
+        
+        // 2. 创建网络请求
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse,
-              let dateHeader = httpResponse.allHeaderFields["Date"] as? String else {
-            print("Failed to get Date header")
-            return
+        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            if let error = error {
+                print("Network error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  let dateHeader = httpResponse.allHeaderFields["Date"] as? String else {
+                print("Failed to get Date header")
+                return
+            }
+            
+            // 3. 解析服务器时间
+            let serverFormatter = DateFormatter()
+            serverFormatter.locale = Locale(identifier: "en_US_POSIX")
+            serverFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+            
+            guard let serverDate = serverFormatter.date(from: dateHeader) else {
+                print("Failed to parse server date")
+                return
+            }
+            
+            // 4. 转换到所选时区
+            let selectedTimeZone = isFollowSystem ? TimeZone.current : TimeZone(identifier: timeZoneIden) ?? TimeZone.current
+            
+            let selectedFormatter = DateFormatter()
+            selectedFormatter.timeZone = selectedTimeZone
+            selectedFormatter.dateStyle = .medium
+            selectedFormatter.timeStyle = .medium
+            let selectedTime = selectedFormatter.string(from: Date())
+            
+            // 5. 转换服务器时间到所选时区
+            let convertedFormatter = DateFormatter()
+            convertedFormatter.timeZone = selectedTimeZone
+            convertedFormatter.dateStyle = .medium
+            convertedFormatter.timeStyle = .medium
+            let convertedTime = convertedFormatter.string(from: serverDate)
+            
+            // 6. 返回所有时间信息
+            DispatchQueue.main.async {
+                completion((
+                    selectedTime: selectedTime,
+                    systemTime: systemTime,
+                    serverTime: dateHeader,
+                    convertedTime: convertedTime
+                ))
+            }
         }
-        
-        // 3. 解析服务器时间
-        let serverFormatter = DateFormatter()
-        serverFormatter.locale = Locale(identifier: "en_US_POSIX")
-        serverFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-        
-        guard let serverDate = serverFormatter.date(from: dateHeader) else {
-            print("Failed to parse server date")
-            return
-        }
-        
-        // 4. 转换到所选时区
-        let selectedTimeZone = isFollowSystem ? TimeZone.current : TimeZone(identifier: timeZoneIden) ?? TimeZone.current
-        
-        let selectedFormatter = DateFormatter()
-        selectedFormatter.timeZone = selectedTimeZone
-        selectedFormatter.dateStyle = .medium
-        selectedFormatter.timeStyle = .medium
-        let selectedTime = selectedFormatter.string(from: Date())
-        
-        // 5. 转换服务器时间到所选时区
-        let convertedFormatter = DateFormatter()
-        convertedFormatter.timeZone = selectedTimeZone
-        convertedFormatter.dateStyle = .medium
-        convertedFormatter.timeStyle = .medium
-        let convertedTime = convertedFormatter.string(from: serverDate)
-        
-        // 6. 返回所有时间信息
-        DispatchQueue.main.async {
-            completion((
-                selectedTime: selectedTime,
-                systemTime: systemTime,
-                serverTime: dateHeader,
-                convertedTime: convertedTime
-            ))
-        }
+        task.resume()
     }
-    task.resume()
-}
+    
+    ///- Returns:
+    /// 从日期字符串解析, 处理时间数据
+    /// 适配 DateFormatter 的 .medium 样式, 可自由指定目标时区（默认当前时区）
+    /// 返回: CustomSystemTime
+    private static func from(dateString: String, timeZone: TimeZone = .current) -> CustomSystemTime? {
+        let formatter = DateFormatter()
+        formatter.timeZone = timeZone
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        
+        guard let date = formatter.date(from: dateString) else { return nil }
+        
+        let calendar = Calendar.current
+        let components = calendar.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second, .nanosecond, .weekday],
+            from: date
+        )
+        
+        guard let year = components.year,
+              let month = components.month,
+              let day = components.day,
+              let hour = components.hour,
+              let minute = components.minute,
+              let second = components.second,
+              let weekday = components.weekday else {
+            return nil
+        }
+        
+        // 转换星期格式（系统返回1=周日，需转为1=周一）
+        let adjustedWeekday = (weekday + 5) % 7 + 1
+        
+        return CustomSystemTime(
+            is24HourFormat: Locale.current.uses24HourTimeFormat,
+            hour: hour,
+            minute: minute,
+            second: second,
+            millisecond: (components.nanosecond ?? 0) / 1_000_000,
+            year: year,
+            month: month,
+            day: day,
+            weekday: Weekday(rawValue: adjustedWeekday) ?? .monday,
+            timezoneOffset: timeZone.secondsFromGMT() / 3600
+        )
+    }
+    
+    ///- Returns:
+    /// 直接获取当前系统时间 (Date()), 处理时间数据
+    /// 根据本地系统的日历设置格式,始终实时获取系统当前时间
+    /// 返回: CustomSystemTime
+    private static func getSystemTime(forTimeZone identifier: String = "Asia/Shanghai") -> CustomSystemTime? {
+        // 配置DateFormatter
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(identifier: identifier) ?? .current
+        formatter.locale = Locale.current
+        
+        //  获取当前日期（已应用指定时区）
+        let now = Date()
+        
+        // 使用 Calendar 分解日期组件
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second, .nanosecond, .weekday, .timeZone], from: now)
+        
+        // 安全解包必要组件
+        guard let year = components.year,
+              let month = components.month,
+              let day = components.day,
+              let hour = components.hour,
+              let minute = components.minute,
+              let second = components.second,
+              let nanosecond = components.nanosecond,
+              let weekday = components.weekday else {
+            return nil
+        }
+        
+        // 计算衍生值
+        let millisecond = nanosecond / 1_000_000
+        let adjustedWeekday = (weekday + 5) % 7 + 1  // 转换星期格式（1=周一...7=周日）
+        let timezoneOffset = formatter.timeZone!.secondsFromGMT() / 3600 //时区偏移(小时)
 
-/// 时间戳转为时间字符串
-/// - Parameter timeData: 总数据,
-/// - Parameter TimeFormat: 时间转换类型
-/// - Returns: 时间字符串
-func getTimeStringForInt(timeData: Int, format: TimeFormat = .hoursMinutesSeconds) -> String {
-    switch format {
-    case .hoursMinutesSeconds:
-        let hours = timeData / 3600
-        let minutes = (timeData % 3600) / 60
-        let remainingSeconds = (timeData % 3600) % 60
-        return String(format: "%.2d:%.2d:%.2d", hours, minutes, remainingSeconds)
-    case .hoursMinutes:
-        return String(format: "%.2d:%.2d", (timeData / 60), (timeData % 60))
+        
+        return CustomSystemTime(
+            is24HourFormat: Locale.current.uses24HourTimeFormat,
+            hour: hour,
+            minute: minute,
+            second: second,
+            millisecond: millisecond,
+            year: year,
+            month: month,
+            day: day,
+            weekday: CustomSystemTime.Weekday(rawValue: adjustedWeekday) ?? .monday,
+            timezoneOffset: timezoneOffset
+        )
     }
+
 }
 
 // MARK: - Locale 扩展
