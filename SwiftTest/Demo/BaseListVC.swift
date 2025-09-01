@@ -10,6 +10,7 @@ import UIKit
 let kCustomTableViewCell = "CustomTableViewCell"
 let kCustomCollectionViewCell = "CustomCollectionViewCell"
 let kCustomCollectionHeaderView = "CustomCollectionHeaderView"
+let kCustomCollectionFooterView = "CustomCollectionFooterView"
 
 class BaseListVC: UIViewController {
     
@@ -130,6 +131,8 @@ class BaseListVC: UIViewController {
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false // 必须关闭 autoresizingMask
+        collectionView.contentInset = UIEdgeInsets(top: 20, left: 16, bottom: 20, right: 16)
+
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UINib.init(nibName: kCustomCollectionViewCell, bundle: Bundle.main), forCellWithReuseIdentifier: kCustomCollectionViewCell)
@@ -138,6 +141,11 @@ class BaseListVC: UIViewController {
             CustomCollectionHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: kCustomCollectionHeaderView
+        )
+        collectionView.register(
+            CustomCollectionHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter,
+            withReuseIdentifier: kCustomCollectionFooterView
         )
         view.addSubview(collectionView)
         
@@ -202,6 +210,115 @@ class BaseListVC: UIViewController {
 //        print("titleLetterToIndex: \(titleLetterToIndex)")
         
     }
+    
+    private func printDebugInfo(for indexPath: IndexPath,
+                              collectionView: UICollectionView,
+                              flowLayout: UICollectionViewFlowLayout,
+                              cellWidth: CGFloat) {
+        // 1. 计算行数
+        let itemCount = self.cellTitleArr[indexPath.section].count
+        let rowCount = Int(ceil(Double(itemCount) / Double(self.collectionColumnCount)))
+        
+        // 2. 获取分区数
+        let sectionCount = collectionView.numberOfSections
+ 
+
+//        总高度 = Σ(每个分区高度) + Σ(分区间距)
+//                  │           │
+//                  │           └── 相邻分区的 footer 和 header 之间的间距
+//                  └── (cell高度×行数 + 行间距 + 分区inset + header高度 + footer 高度)
+        var manualHeight: CGFloat = 0
+        
+        for section in 0..<sectionCount {
+            let itemsInSection = cellTitleArr[section].count
+            let rowCount = ceil(Double(itemsInSection) / Double(collectionColumnCount))
+            
+            let sectionHeight = (cellWidth * CGFloat(rowCount))
+                              + (flowLayout.minimumLineSpacing * CGFloat(rowCount - 1))
+                              + flowLayout.sectionInset.top
+                              + flowLayout.sectionInset.bottom
+                              + headerHeight(for: section) // 3. 获取页眉页脚高度
+                              + footerHeight(for: section) // 3. 获取页眉页脚高度
+            
+            manualHeight += sectionHeight
+            
+            // 系统默认行为：相邻分区的 footer 和 header 会紧贴在一起
+    //        Section 1 Footer
+    //        Section 2 Header // 无间距！
+            // 添加分区间距（最后一个分区不加）
+//            if section < sectionCount - 1 {
+//                manualHeight += flowLayout.minimumLineSpacing * 2  // 示例：使用双倍行间距
+//            }
+        }
+        
+//        // 添加 collectionView 的 contentInset（如果需要）
+//        totalHeight += collectionView.contentInset.top ?? 0
+//        totalHeight += collectionView.contentInset.bottom ?? 0
+        
+        
+        // 5. 计算手动宽度
+        let manualWidth = (cellWidth * CGFloat(self.collectionColumnCount))
+            + (flowLayout.minimumInteritemSpacing * CGFloat(self.collectionColumnCount - 1))
+            + (flowLayout.sectionInset.left + flowLayout.sectionInset.right)
+        
+        // 6. 打印调试信息
+        print("""
+        --- Layout Debug Info ---
+        列数: \(self.collectionColumnCount)
+        行数: \(rowCount)
+        分区数: \(sectionCount)
+        Cell 宽度: \(cellWidth)
+        行间距: \(flowLayout.minimumLineSpacing)
+        cell 间距: \(flowLayout.minimumInteritemSpacing)
+        分区内边距: \(flowLayout.sectionInset)
+        collectionView 内边距: \(collectionView.contentInset)
+        -------------------------
+        自动计算宽度: \(collectionView.contentSize.width) = \(flowLayout.collectionViewContentSize.width)
+        手动计算宽度: \(manualWidth)
+        当前可见宽度: \(collectionView.bounds.width)
+        -------------------------
+        自动计算高度: \(collectionView.contentSize.height) = \(flowLayout.collectionViewContentSize.height)
+        手动计算高度: \(manualHeight)
+        当前可见高度: \(collectionView.bounds.height)
+        """)
+    }
+
+    //  获取页眉高度
+    private func headerHeight(for section: Int) -> CGFloat {
+        guard let collectionView = collectionView,
+              let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+            return 0
+        }
+        
+        // 优先使用动态代理返回的高度
+        if let delegate = collectionView.delegate as? UICollectionViewDelegateFlowLayout,
+           let height = delegate.collectionView?(collectionView,
+                         layout: collectionView.collectionViewLayout,
+                         referenceSizeForHeaderInSection: section).height {
+            return height
+        }
+        // 其次使用默认高度
+        return layout.headerReferenceSize.height
+    }
+    
+    //  获取页脚高度
+    private func footerHeight(for section: Int) -> CGFloat {
+        guard let collectionView = collectionView,
+              let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+            return 0
+        }
+        
+        // 优先使用动态代理返回的高度
+        if let delegate = collectionView.delegate as? UICollectionViewDelegateFlowLayout,
+           let height = delegate.collectionView?(collectionView,
+                         layout: collectionView.collectionViewLayout,
+                         referenceSizeForFooterInSection: section).height {
+            return height
+        }
+        // 其次使用默认高度
+        return layout.headerReferenceSize.height
+    }
+
 }
 
 extension BaseListVC: UITableViewDelegate, UITableViewDataSource {
@@ -323,11 +440,9 @@ extension BaseListVC: UICollectionViewDelegate, UICollectionViewDataSource, UICo
         sectionTitleArr.count
     }
     
-
     open func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         cellTitleArr[section].count
     }
-    
     
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: kCustomCollectionViewCell, for: indexPath) as! CustomCollectionViewCell
@@ -362,8 +477,19 @@ extension BaseListVC: UICollectionViewDelegate, UICollectionViewDataSource, UICo
             header.backgroundColor = bgColor
             header.titleLabel.text = sectionTitleArr[indexPath.section]
             return header
+        }else if kind == UICollectionView.elementKindSectionFooter {
+            let footer = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: kCustomCollectionFooterView,
+                for: indexPath
+            ) as! CustomCollectionHeaderView
+            let bgColor = UIColor.fromHex(colorsArr[indexPath.section % 18])
+            footer.backgroundColor = bgColor
+            footer.titleLabel.backgroundColor = .random()
+            footer.titleLabel.text = "Footer"
+            
+            return footer
         }
-        
         return UICollectionReusableView() // 默认返回空视图
     }
     
@@ -376,23 +502,25 @@ extension BaseListVC: UICollectionViewDelegate, UICollectionViewDataSource, UICo
 
         // 读取 Storyboard 中设置的 sectionInsets
         let sectionInsets = flowLayout.sectionInset
-        let cellSpacing: CGFloat = 10 // Cell之间的间距
+        let cellSpacing: CGFloat = flowLayout.minimumInteritemSpacing // Cell之间的间距
         
         // 计算可用宽度（总宽度 - 左右边距 - 所有间距）
         let totalHorizontalSpacing = (collectionColumnCount - 1) * cellSpacing
-        let availableWidth = collectionView.bounds.width - sectionInsets.left - sectionInsets.right - totalHorizontalSpacing
+        let availableWidth = collectionView.bounds.width - sectionInsets.left - sectionInsets.right - totalHorizontalSpacing - collectionView.contentInset.left - collectionView.contentInset.right
         
         // 计算等宽Cell尺寸
         let cellWidth = availableWidth / collectionColumnCount
         
-//        if indexPath.section == 0 && indexPath.row == 0 {
-//            print("""
-//            当前列数: \(collectionColumnCount)
-//            Cell尺寸: \(cellWidth) x \(cellWidth)
-//            实际总宽度: \(collectionView.bounds.width)
-//            计算后总宽度: \(columnCount * cellWidth + (columnCount - 1) * cellSpacing + sectionInsets.left + sectionInsets.right)
-//            """)
-//        }
+        if indexPath.section == 0 && indexPath.row == 0 {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                self.printDebugInfo(for: indexPath,
+                                              collectionView: collectionView,
+                                              flowLayout: flowLayout,
+                                              cellWidth: cellWidth)
+            }
+        }
         
         // 保持正方形（高度=宽度）
         return CGSize(width: cellWidth, height: cellWidth)
@@ -405,6 +533,12 @@ extension BaseListVC: UICollectionViewDelegate, UICollectionViewDataSource, UICo
     open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         return CGSizeMake(collectionView.bounds.width, 45)
     }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        return CGSizeMake(collectionView.bounds.width, 45)
+    }
+    
+    
     
     //MARK: - Actions
     @objc func handleIndexTap(_ gesture: UITapGestureRecognizer) {
