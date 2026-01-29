@@ -34,7 +34,8 @@ class ModelListVC: BaseListVC {
                 "编辑分享表格",
                 "环形进度条",
                 "test",
-                "时区选择器"
+                "时区选择器",
+                "MP305 自定义滚轮",
             ],
             [
                 "UITableView---表格视图",
@@ -111,7 +112,7 @@ extension ModelListVC{
 
         default: break
         }
-        print("Cell clicked at row: \(indexPath.row)")
+        print("section= \(indexPath.section), Cell clicked at row: \(indexPath.row)")
         tableView.deselectRow(at: indexPath, animated: true) // 取消选中
     }
     

@@ -9,29 +9,31 @@ import UIKit
 import SnapKit
 import RxSwift
 
-class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
+class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
     
     var selectedIndex: Int = 0
     var navigationItemTitle: String?
     
-    private var model = DemoTestM()
-    private var disposedBag = DisposeBag()
-    private var container: Container { view as! Container }
+    var model = DemoTestM()
     
-    override func loadView() {
-        super.loadView()
-        if view is Container {
-            
-        }else {
-            view = Container()
+    //MARK: -
+    
+    // 在 viewWillAppear 中恢复状态
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if selectedIndex == 5 {
+            Log.debug("DemoTestVC viewWillAppear 中恢复状态")
+            // 当从 CustomPickViewVC 返回时，显示导航栏
+            navigationController?.navigationBar.isHidden = false
         }
-//        view.backgroundColor = .random()
-//        view.isUserInteractionEnabled = false
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        Log.debug("DemoTestVC viewDidLoad, [\(selectedIndex)]title= \(String(describing: navigationItemTitle))")
+        
         view.backgroundColor = .systemGreen
         title = navigationItemTitle
 
@@ -48,25 +50,113 @@ class DemoTestVC<Container: DemoTestV>: UIViewController, UITextViewDelegate, UI
             container.demo_circularProgressV()
             
         case 3:
-            
-            let view = UIView()
-            self.view.addSubview(view)
-            view.snp.makeConstraints { make in
-                make.width.height.equalTo(200)
-                make.center.equalToSuperview()
-            }
-            view.backgroundColor = .white
-            view.addCorner(corners: [UIRectCorner.topRight, UIRectCorner.topLeft], radius: 20)
-            
+            break
+
         case 4:
-            
             setuptimeZonePickerData()
+            
+        case 5:
+            //隐藏 DemoTestVC 导航栏
+            navigationController?.navigationBar.isHidden = true
+            container.scrollView.isHidden = true
+           
+            
+            let vc = CustomPickViewVC()
+            // 添加回调
+            vc.onDismiss = { [weak self] in
+                Log.debug("CustomPickViewVC 已关闭，自动返回")
+                self?.navigationController?.popViewController(animated: true)
+            }
+            
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .fullScreen
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.present(nav, animated: true)
+            }
+
             
         default: break
         }
         
     }
+    
+    let referenceStyle: (UILabel) -> Void = { label in
+        label.textAlignment = .center
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 17, weight: .regular) // 确保字号/字重一致
+        label.backgroundColor = .clear
+    }
+    
+    private func removePickerSelectionIndicator(_ pickerView: UIPickerView) {
+//        // 方法1：遍历并隐藏所有 UIImageView（选择指示器通常是 UIImageView）
+//        for subview in pickerView.subviews {
+//            if let imageView = subview as? UIImageView {
+//                imageView.isHidden = true
+//                imageView.alpha = 0
+//            }
+//        }
+        
+//        // 方法2：使用 KVC 移除选择指示器（如果上面方法无效）
+//        pickerView.subviews.forEach { subview in
+//            if subview.bounds.height <= 1.0 || subview.bounds.height >= pickerView.bounds.height - 2 {
+//                // 这很可能是选择指示器（高度很小或很大）
+//                subview.isHidden = true
+//                subview.alpha = 0
+//            }
+//        }
+//
+        // 方法3：iOS 14+ 的特殊处理
+        if #available(iOS 14.0, *) {
+            // 移除 selection overlay
+            pickerView.subviews.forEach { view in
+                if view.description.contains("UIPickerColumnView") {
+                    view.subviews.forEach { subview in
+                        if subview.description.contains("UIPickerColumnHeader") {
+                            subview.isHidden = true
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+    }
+    // 递归查找并移除所有不需要的背景色
+    private func removePickerViewBackground(_ pickerView: UIPickerView) {
 
+//        // 递归设置所有视图为透明
+//        func makeTransparent(view: UIView) {
+//            view.backgroundColor = .clear
+//            view.isOpaque = false
+//            view.subviews.forEach { makeTransparent(view: $0) }
+//        }
+//
+//        makeTransparent(view: pickerView)
+        
+        func recursiveClearBackground(view: UIView) {
+            view.backgroundColor = .clear
+            view.subviews.forEach { recursiveClearBackground(view: $0) }
+        }
+        
+        pickerView.subviews.forEach { recursiveClearBackground(view: $0) }
+        
+        // 特殊处理：iOS 14+ 的 UIPickerView 结构
+        if #available(iOS 14.0, *) {
+            for subview in pickerView.subviews {
+                // 移除UIPickerColumnView的背景
+                if let columnView = subview as? UICollectionView {
+                    columnView.backgroundColor = .clear
+                }
+                
+                // 移除UITableView的背景
+                if let tableView = subview as? UITableView {
+                    tableView.backgroundColor = .clear
+                    tableView.separatorStyle = .none
+                }
+            }
+        }
+    }
 
     //MARK: - Actions
     //MARK: frameAndBouonds

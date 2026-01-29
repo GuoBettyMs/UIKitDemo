@@ -10,6 +10,179 @@ import UIKit
 import AudioToolbox
 import Alamofire
 
+// MARK: - 震动
+//滚动中的震动 - 使用 UISelectionFeedbackGenerator（轻量）
+func triggerSelectionVibration() {
+    if #available(iOS 10.0, *) {
+        // 滚动时每变化一格震动一次
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+    } else {
+        AudioServicesPlaySystemSound(1519)
+    }
+}
+
+// 停止时的震动 - 使用 UIImpactFeedbackGenerator(.medium)
+func triggerImpactVibration() {
+    if #available(iOS 10.0, *) {
+        // 用户松手时的确认反馈
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+    } else {
+        AudioServicesPlaySystemSound(1520)
+    }
+}
+
+// MARK: - 获取当前语言
+func GetCurrentLanguage() -> String {
+
+    let preferredLang = Bundle.main.preferredLocalizations.first! as NSString
+    switch String(describing: preferredLang) {
+    case "en-US", "en-CN":
+        return "en"//英文
+    case "zh-Hans-US","zh-Hans":
+        return "cn"//中文
+    default:
+        return "en"
+    }
+}
+
+
+//MARK: - Bahnschrift 字体
+
+//带"TM"商标的自定义字体
+func bahnschrift_formattedWithTM(_ str: String, showTM: Bool = false) -> NSMutableAttributedString {
+    var traits: [UIFontDescriptor.TraitKey: Any] = [:]
+    
+    // 同时设置字重和字形宽度
+    if #available(iOS 16.0, *) {
+        traits = [
+            .weight: UIFont.Weight.light,
+            .width: UIFont.Width.compressed // 宽度：compressed (最接近 semicondensed)
+        ]
+    } else {
+        traits = [
+            .weight: UIFont.Weight.light,
+        ]
+    }
+    
+    // 创建字体描述符
+    let descriptor = UIFontDescriptor(
+        fontAttributes: [
+            .name: kBahnschrift,// 字体家族名
+            .traits: traits
+        ]
+    )
+    let baseFont = UIFont(descriptor: descriptor, size: 20)// 设置基础字体
+    
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.lineHeightMultiple = 0.8
+    paragraphStyle.alignment = .center
+    paragraphStyle.lineBreakMode = .byWordWrapping
+    
+    let fullText = showTM ? str + "TM" : str
+    let res = NSMutableAttributedString(
+        string: fullText,
+        attributes: [
+            .paragraphStyle: paragraphStyle,
+            .font: baseFont,
+            .kern: 0.25,// 调整此值控制间距（单位：磅）
+            .baselineOffset: -2
+        ]
+    )
+    
+    // 如果显示TM，设置上标效果
+    if showTM {
+        let tmRange = NSRange(location: str.count, length: 2)
+        
+        // 创建TM的小号字体
+        let tmDescriptor = UIFontDescriptor(
+            fontAttributes: [
+                .name: kBahnschrift,
+                .traits: traits
+            ]
+        )
+        let tmFont = UIFont(descriptor: tmDescriptor, size: 7) // 缩小上标字体
+        // 上标效果
+        res.addAttribute(.baselineOffset, value: 6, range: tmRange) // 向上偏移
+        res.addAttribute(.font, value: tmFont, range: tmRange) // 应用小号字体
+    }
+    
+    return res
+}
+
+
+/// 自定义字体
+/// - Parameters:
+///   - label: 标签
+func bahnschrift_formatted(_ str: String, _ size: CGFloat = 20, weight: UIFont.Weight = .regular, alignment: NSTextAlignment = .center, baseline: CGFloat = 0, kern: CGFloat = 0) -> NSMutableAttributedString{
+
+    var font: UIFont
+    let bahnschriftFontName = getBahnschriftFontName(for: weight)
+    
+    if let customFont = UIFont(name: bahnschriftFontName, size: size) {
+        // 先尝试使用 Bahnschrift 字体
+        font = customFont
+//            Log.debug("formattedString, 3005 使用 Bahnschrift 字体: \(bahnschriftFontName)")
+    }else {
+        // 如果自定义字体不可用，使用系统字体
+        font = UIFont.systemFont(ofSize: size, weight: weight)
+//            Log.debug("formattedString, 3005 Bahnschrift 字体不可用，使用系统字体")
+    }
+    
+    let paragraphStyle = NSMutableParagraphStyle()
+//        paragraphStyle.lineSpacing = 41.0  // 设置行高
+    paragraphStyle.alignment = alignment  // 居中
+    
+    return NSMutableAttributedString(
+        string: str,
+        attributes: [
+            .font: font,
+            .baselineOffset: baseline,
+            .kern: kern, // 调整此值控制间距（单位：磅）
+            .paragraphStyle: paragraphStyle  // 使用初始化好的段落样式
+        ]
+    )
+    
+}
+
+// 根据字重获取对应的 Bahnschrift 字体名称
+//        3005 字体家族: Bahnschrift
+//        3005  - Bahnschrift
+//        3005  - Bahnschrift_Light
+//        3005  - Bahnschrift_SemiLight
+//        3005  - Bahnschrift_SemiBold
+//        3005  - Bahnschrift_Bold
+//        3005  - Bahnschrift_SemiCondensed
+//        3005  - Bahnschrift_Light-SemiCondensed
+//        3005  - Bahnschrift_SemiLight-SemiCondensed
+//        3005  - Bahnschrift_SemiBold-SemiCondensed
+//        3005  - Bahnschrift_Bold-SemiCondensed
+//        3005  - Bahnschrift_Condensed
+//        3005  - Bahnschrift_Light-Condensed
+//        3005  - Bahnschrift_SemiLight-Condensed
+//        3005  - Bahnschrift_SemiBold-Condensed
+//        3005  - Bahnschrift_Bold-Condensed
+private func getBahnschriftFontName(for weight: UIFont.Weight) -> String {
+    switch weight {
+    case .ultraLight, .thin:
+        return "Bahnschrift_Light"
+    case .light:
+        return "Bahnschrift_Light"
+    case .regular:
+        return "Bahnschrift"
+    case .medium:
+        return "Bahnschrift"
+    case .semibold:
+        return "Bahnschrift_SemiBold"
+    case .bold:
+        return "Bahnschrift_Bold"
+    case .heavy, .black:
+        return "Bahnschrift_Bold"
+    default:
+        return "Bahnschrift"
+    }
+}
 
 // MARK: - 样式配置
 func configureGlobalNavigationBarAppearance(navi: UINavigationController){

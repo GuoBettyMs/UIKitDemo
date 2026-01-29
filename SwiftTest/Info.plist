@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>MANIFOLDEXTENDEDCF-BOLD.TTF</string>
+		<string>SourceHanSansCN-Bold.otf</string>
+		<string>SourceHanSansCN-Regular.otf</string>
+		<string>ISDTYAHEI.TTF</string>
+		<string>bahnschrift.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

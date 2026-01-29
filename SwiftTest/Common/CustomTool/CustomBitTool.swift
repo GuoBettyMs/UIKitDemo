@@ -17,13 +17,13 @@ struct CustomBitTool{
     ///   - byteCount: 字节数（默认1字节=8位）
     /// - Returns: 组合后的整数
     /// - Note: 如果 bits.count 小于 byteCount*8，高位补0；如果超出，截断处理
-    static func combineBits(_ bits: [Int], byteCount: Int = 1) -> Int{
+    static func combineBits(_ bits: [Int8], byteCount: Int = 1) -> Int{
         let bitCount = 8 * byteCount
         var result = 0  // 初始化结果变量
         
         //添加边界检查（min(bits.count, bitCount)）; 位操作只影响最低位（bits[i] & 0x01）
         for i in 0..<min(bits.count, bitCount) {
-            result |= (bits[i] & 0x01) << i  //将 bits[i] 左移 i 位,再与 byte 进行位或赋值运算
+            result |= (Int(bits[i]) & 0x01) << i  //将 bits[i] 左移 i 位,再与 byte 进行位或赋值运算
         }
         return result
         
@@ -52,9 +52,9 @@ struct CustomBitTool{
     ///   - value: 要拆分的整数值
     ///   - byteCount: 字节数（默认1字节=8位）
     /// - Returns: 位数组（从低位到高位排列）
-    static func splitToBits(_ value: Int, byteCount: Int = 1) -> [Int]{
+    static func splitToBits(_ value: Int, byteCount: Int = 1) -> [Int8]{
         let bitCount = 8 * byteCount
-        return (0..<bitCount).map { (value >> $0) & 0x01 }
+        return (0..<bitCount).map { Int8((value >> $0) & 0x01) }
         
     //    // 预分配数组容量以提高性能
     //    var bits = Array(repeating: 0, count: bitCount)
@@ -135,7 +135,7 @@ struct CustomBitTool{
         // 位组合/拆分
         let bits = [1, 0, 1, 1]  // 低位到高位
         let byte = 13
-        let combined = combineBits(bits)
+        let combined = combineBits(bits as! [Int8])
         let split = splitToBits(byte)
         
         print("\n位组合(低到高):", combined) // 13 (1101)

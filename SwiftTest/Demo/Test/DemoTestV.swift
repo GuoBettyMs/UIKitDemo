@@ -10,7 +10,6 @@ import SnapKit
 
 class DemoTestV: BaseV {
 
-    // MARK: - Public Properties
     //frame 和 bounds 的区别
     var parentV = UIView()
     var childV = UIView()
@@ -25,8 +24,6 @@ class DemoTestV: BaseV {
     
     //时区
     let timeZonePicker = UIPickerView()
-    
-    // MARK: - Private Properties
     private let rectResultL = UILabel()
     private var timeZoneL = UILabel()
     
@@ -57,14 +54,14 @@ class DemoTestV: BaseV {
         parentV.frame = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         parentV.bounds = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         parentV.backgroundColor = .random().withAlphaComponent(0.5)
-        parentV.addCorner(corners: .topRight, radius: 20)
+        parentV.roundCorners(.topRight, radius: 20)
 
         childV = UIView()
         contentView.addSubview(childV)
         childV.bounds = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         childV.frame = CGRect(x: 0, y: 0, width: initWidth, height: initHeight)
         childV.backgroundColor = .random().withAlphaComponent(0.5)
-        childV.addCorner(corners: .bottomRight, radius: 20)
+        childV.roundCorners(.bottomRight, radius: 20)
         
         contentView.addSubview(rectResultL)
         rectResultL.textColor = .black

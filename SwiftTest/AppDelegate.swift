@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        //如果是ios13以上,不变; ios13以下,Appdelegate中只是需要增加window的创建，应用程序的UI生命周期依然还是放在SceneDelegate中管理，不可能AppDelegate和SceneDelegate同时来管理。    
+        //如果是ios13以下,不变; ios13以上,Appdelegate中只是需要增加window的创建，应用程序的UI生命周期依然还是放在SceneDelegate中管理，不可能AppDelegate和SceneDelegate同时来管理。
         
         if #available(iOS 13.0, *) {
             //跳转到 SceneDelegate 执行

@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 enum TableType {
     case powerData    // 第一个表格（电力数据）
     case studentData  // 第二个表格（学生数据）
@@ -32,7 +33,8 @@ struct TablePosition {
 
 class DemoTestM{
     
-    // 表格
+
+    //MARK:  表格
     var fileName: String = "data_export" // CSV 文件名
     var csvContent: String = "" // CSV 原始内容
     var tablePositions: [TableType: TablePosition] = [:] // 表格位置缓存

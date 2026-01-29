@@ -7,7 +7,13 @@
 
 import UIKit
 
+//MARK: - 全局字体
 
+let kBahnschrift = "bahnschrift"
+let kManifoldExtendCF_bold = "MANIFOLDEXTENDEDCF-BOLD"
+let kISDTYahei = "ISDTYAHEI"
+let kSourceHanSansCN_Bold = "SourceHanSansCN-Bold"
+let kSourceHanSansCN_Regular = "SourceHanSansCN-Regular"
 
 //MARK: - 异常
 enum VendingMachineError: Error {
