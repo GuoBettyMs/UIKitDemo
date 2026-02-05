@@ -11,21 +11,21 @@ struct MathUtil {
     
     private init() {}  // 防止外部实例化,不允许 MathUtil()
     
-    // MARK: - Number Formatting
-    //多余小数会四舍五入，不足会补零（如 1.5 自动格式化为 1.50 ）,根据设备/指定地区显示数字格式（如欧美用 1,234.56，部分欧洲用 1 234,56）
-    static func format(double: Double, decimalPlaces accuracy: Int, locale: Locale = .current) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = locale
-        formatter.minimumFractionDigits = accuracy
-        formatter.maximumFractionDigits = accuracy
-        formatter.minimumIntegerDigits = 1
-        
-        guard let formatted = formatter.string(from: NSNumber(value: double)) else {
-            return String(format: "%.\(accuracy)f", double)
-        }
-        return formatted
-    }
+//    // MARK: - Number Formatting
+//    //多余小数会四舍五入，不足会补零（如 1.5 自动格式化为 1.50 ）,根据设备/指定地区显示数字格式（如欧美用 1,234.56，部分欧洲用 1 234,56）
+//    static func format(double: Double, decimalPlaces accuracy: Int, locale: Locale = .current) -> String {
+//        let formatter = NumberFormatter()
+//        formatter.numberStyle = .decimal
+//        formatter.locale = locale
+//        formatter.minimumFractionDigits = accuracy
+//        formatter.maximumFractionDigits = accuracy
+//        formatter.minimumIntegerDigits = 1
+//        
+//        guard let formatted = formatter.string(from: NSNumber(value: double)) else {
+//            return String(format: "%.\(accuracy)f", double)
+//        }
+//        return formatted
+//    }
     
     // MARK: - Number Filtering
     
@@ -114,9 +114,9 @@ struct MathUtil {
     static func example(){
         //MathUtil
         // Formatting
-        let formatted = MathUtil.format(double: 1234.5678, decimalPlaces: 2)
-        print("Formatting: \(formatted)\n") //Formatting: 1,234.57
-        
+//        let formatted = MathUtil.format(double: 1234.5678, decimalPlaces: 2)
+//        print("Formatting: \(formatted)\n") //Formatting: 1,234.57
+//        
         // Filtering
         let intValue = MathUtil.filteredInt(from: "abc123def")
         let doubleValue = MathUtil.filteredDouble(from: "12.34abc")

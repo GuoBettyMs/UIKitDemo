@@ -12,7 +12,7 @@ extension UIColor {
     /// 从 Int 十六进制值创建 UIColor
     /// - Parameter hexValue: 格式如 `0xFF0000`（红色）
     /// - Returns: 对应的 UIColor
-    static func fromHex(_ hexValue: Int) -> UIColor {
+    static func fromIntHex(_ hexValue: Int) -> UIColor {
         UIColor(
             red: CGFloat((hexValue & 0xFF0000) >> 16) / 255.0,
             green: CGFloat((hexValue & 0xFF00) >> 8) / 255.0,
@@ -25,7 +25,7 @@ extension UIColor {
     /// 从十六进制字符串创建 UIColor（支持 `#RRGGBB` 或 `RRGGBB` 格式）
     /// - Parameter hexString: 如 `"#FF0000"` 或 `"FF0000"`
     /// - Returns: 对应的 UIColor，解析失败时返回 `.gray`
-    static func fromHex(_ hexString: String) -> UIColor {
+    static func fromStringHex(_ hexString: String) -> UIColor {
         var formattedString = hexString.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
         if formattedString.hasPrefix("#") {
@@ -62,11 +62,11 @@ extension UIColor {
     //MARK: - Usage Example
     static func example(){
         // 从 Int 十六进制值创建颜色
-        let redColor = UIColor.fromHex(0xFF0000)
+        let redColor = UIColor.fromIntHex(0xFF0000)
 
         // 从十六进制字符串创建颜色
-        let greenColor = UIColor.fromHex("#00FF00")
-        let blueColor = UIColor.fromHex("0000FF")
+        let greenColor = UIColor.fromStringHex("#00FF00")
+        let blueColor = UIColor.fromStringHex("0000FF")
 
         // 生成随机颜色
         let randomColor = UIColor.random()

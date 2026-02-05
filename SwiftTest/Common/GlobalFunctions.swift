@@ -33,6 +33,23 @@ func triggerImpactVibration() {
     }
 }
 
+
+func isShockOrBeep(){
+   
+    let soundMiddle = SystemSoundID(1519)
+    AudioServicesPlaySystemSound(soundMiddle)
+
+    var soundID:SystemSoundID = 0
+    //获取声音地址
+    let path = Bundle.main.path(forResource: "beep", ofType: "mp3")
+    //地址转换
+    let baseURL = NSURL(fileURLWithPath: path!)
+    //赋值
+    AudioServicesCreateSystemSoundID(baseURL, &soundID)
+    AudioServicesPlaySystemSound (soundID)
+    
+}
+
 // MARK: - 获取当前语言
 func GetCurrentLanguage() -> String {
 
@@ -197,6 +214,7 @@ func configureGlobalNavigationBarAppearance(navi: UINavigationController){
         ]//导航栏标题的文本字体色
         navi.navigationBar.standardAppearance = appearance
         navi.navigationBar.scrollEdgeAppearance = appearance
+        navi.navigationBar.compactAppearance = appearance // iPad 横屏用
     } else {
         // Legacy iOS (< 13)
         navi.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -210,6 +228,7 @@ func configureGlobalNavigationBarAppearance(navi: UINavigationController){
 
 }
 
+//配置 UITabBar
 func configureGlobalTabBarAppearance() {
     if #available(iOS 15.0, *) {
         let appearance = UITabBarAppearance()
@@ -234,21 +253,6 @@ func configureGlobalTabBarAppearance() {
     }
 }
 
-func isShockOrBeep(){
-   
-    let soundMiddle = SystemSoundID(1519)
-    AudioServicesPlaySystemSound(soundMiddle)
-
-    var soundID:SystemSoundID = 0
-    //获取声音地址
-    let path = Bundle.main.path(forResource: "beep", ofType: "mp3")
-    //地址转换
-    let baseURL = NSURL(fileURLWithPath: path!)
-    //赋值
-    AudioServicesCreateSystemSoundID(baseURL, &soundID)
-    AudioServicesPlaySystemSound (soundID)
-    
-}
 
 
 //MARK: - 角度转弧度

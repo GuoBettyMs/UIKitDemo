@@ -32,7 +32,12 @@ class IndexedTapGestureRecognizer: UITapGestureRecognizer {
 }
 
 extension IndexedTapGestureRecognizer: UIGestureRecognizerDelegate{
-    /// - Returns:
+    
+    /// 触摸发生时立即判断
+    /// - Parameters:
+    ///   - touch: 触摸位置
+    /// - Returns: true：接收触摸; false：忽略触摸
+    /// - Note: 过滤触摸事件，决定是否让手势识别器处理该触摸
     /// 解决手势事件与 UITableView 的点击事件冲突
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if let touchV = touch.view{

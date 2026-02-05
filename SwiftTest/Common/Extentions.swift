@@ -124,7 +124,7 @@ extension Float {
 }
 
 extension Double {
-    //多余小数会四舍五入，不足不补零（如 1.5 格式化为 1.50 需手动处理）
+    //会四舍五入，不足不补零（如 1.5 格式化为 1.50 需手动处理）
     /*
      let p: Int = 13650
      let p1 = Double(p) / 1000.0
@@ -155,18 +155,30 @@ extension Double {
         
         return "\(integerPart).\(decimalPart)"
     }
+    
+    //固定形式, 几位整数 + 几位小数
+    func formatDigits(_ rawValue: Double, numberofIntegerdigits: Int, numberofFractiondigits: Int) -> String {
+        
+        let formatter = NumberFormatter()
+        formatter.minimumIntegerDigits = numberofIntegerdigits  // 整数部分，不足补0
+        formatter.minimumFractionDigits = numberofFractiondigits // 小数部分
+        formatter.maximumFractionDigits = numberofFractiondigits // 小数部分
+        
+        return (formatter.string(from: NSNumber(value: rawValue)) ?? "00.00")
+    }
+    
 }
 
-extension Decimal {//Decimal 计算速度比 Float 慢约10倍
-    /// 格式化为指定位数字符串
-    func formatted(_ decimalPlaces: Int = 2) -> String {
-        let formatter = NumberFormatter()
-        formatter.minimumFractionDigits = decimalPlaces
-        formatter.maximumFractionDigits = decimalPlaces
-        formatter.numberStyle = .decimal
-        return formatter.string(from: self as NSDecimalNumber) ?? "\(self)"
-    }
-}
+//extension Decimal {//Decimal 计算速度比 Float 慢约10倍
+//    /// 格式化为指定位数字符串
+//    func formatted(_ decimalPlaces: Int = 2) -> String {
+//        let formatter = NumberFormatter()
+//        formatter.minimumFractionDigits = decimalPlaces
+//        formatter.maximumFractionDigits = decimalPlaces
+//        formatter.numberStyle = .decimal
+//        return formatter.string(from: self as NSDecimalNumber) ?? "\(self)"
+//    }
+//}
 
 // MARK: - 扩展：便捷初始化方法
 extension NSNotification.Name {

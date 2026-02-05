@@ -17,10 +17,11 @@ extension UsbV{
     
     //MARK: 更新 usb 数据
     func updateUsbData(_ v: Int, _ c: Int, _ p: Int, a: Int,_ protocolName: String, isLocalizedStr: Bool = true){
-
-        let volStr = MathUtil.format(double:  Double(abs(v + 4))/1000.0, decimalPlaces: a)+"V"
-        let curStr = MathUtil.format(double:  Double(abs(c + 4))/1000.0, decimalPlaces: a)+"A"
-        let powStr = MathUtil.format(double:  Double(abs(p + 4))/1000.0, decimalPlaces: a)+"W"
+        
+        let volStr = (Double(abs(v + 4))/1000.0).formatted(decimalPlaces: a)+"V"
+        let curStr = (Double(abs(c + 4))/1000.0).formatted(decimalPlaces: a)+"A"
+        let powStr = (Double(abs(p + 4))/1000.0).formatted(decimalPlaces: a)+"W"
+        
         currentValues = (
             v: v != 0 ? volStr : "",
             c: c != 0 ? curStr : "",

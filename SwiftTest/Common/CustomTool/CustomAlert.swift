@@ -4,12 +4,13 @@
 //
 //  Created by user on 2025/4/22.
 //
-// 封装 UIViewController
+// 封装提示框
 
 import UIKit
 
 struct CustomAlert{
 
+    //MARK: 交互式警告框
     static func showAdaptiveAlert(
         on vc: UIViewController,
         with title: String,
@@ -17,11 +18,22 @@ struct CustomAlert{
         actions: [UIAlertAction] = [UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default)],
         sourceView: UIView? = nil // iPad锚点视图
     ) {
+        // 创建标准警告框
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
 
-        for action in actions {
+        // 排序按钮：取消按钮应该在左边（iOS规范）
+        let sortedActions = actions.sorted { action1, action2 in
+            if action1.style == .cancel && action2.style != .cancel {
+                return false // 取消按钮放最后
+            }
+            return true
+        }
+        
+        // 添加用户操作按钮
+        for action in sortedActions {
             alert.addAction(action)
         }
+        
         
         // iPad适配
         if let popover = alert.popoverPresentationController {
@@ -32,6 +44,7 @@ struct CustomAlert{
         vc.present(alert, animated: true)
     }
  
+    //MARK: 短暂提示
     static func showToast(
         title: String,
         message: String? = nil,
@@ -41,11 +54,11 @@ struct CustomAlert{
     ) {
         let alert = UIAlertController.init(title: title, message: nil, preferredStyle: .alert)
         alert.message = message // 新增消息内容
+        
         if #available(iOS 13.0, *) {
             alert.overrideUserInterfaceStyle = interfaceStyle
-        } else {
-            // Fallback on earlier versions
         }
+        
         let popover = alert.popoverPresentationController
         if (popover != nil) {
             popover?.sourceView = vc.self.view
@@ -53,6 +66,8 @@ struct CustomAlert{
             popover?.permittedArrowDirections  = .any
         }
         vc.present(alert, animated: true)
+        
+        // 定时自动关闭
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             alert.dismiss(animated: true, completion: nil)
         }

@@ -23,82 +23,121 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let application = UIApplication.shared
         setupConstant(application)
-        
-        let storyboard = UIStoryboard(name: "LaunchScreen", bundle: nil)
-        let vc = storyboard.instantiateInitialViewController()
-        window?.rootViewController = vc
-        window?.makeKeyAndVisible()
+         
 
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            
-            // 使用 createTabBarController 方法创建 UITabBarController
-            let tabBarController = self.createTabBarController()
-
-            // 将 UITabBarController 设置为根视图控制器
-            self.window?.rootViewController = tabBarController
-            
-//            if isSceneEntranceStoryboard {
-//                //故事版
-//                let storyboard = UIStoryboard(name: "DemoHomepage", bundle: nil)
-//                let vc = storyboard.instantiateInitialViewController()
-//                self.window?.rootViewController = vc
-//                
-//            }else{
-//                //纯代码版
-//                self.window?.rootViewController = FatherViewController()//不带导航栏
-////                self.window?.rootViewController = NavigationController(rootViewController: DemoVC())//带导航栏
-//            }
-            
-            self.window?.makeKeyAndVisible()
-        }
-
+        // 使用 createTabBarController 方法创建 UITabBarController
+        let tabBarController = self.createTabBarController()
+        // 将 UITabBarController 设置为根视图控制器
+        self.window?.rootViewController = tabBarController
+        self.window?.makeKeyAndVisible()
 
     }
     
     // MARK: - TabBar Controller 创建与配置
     func createTabBarController() -> UITabBarController {
+        
         let tabBarController = UITabBarController()
         
         // 1. 定义Tab页数据
-        let tabs: [(vc: UIViewController, title: String, iconName: String, tag: Int)] = [
-            (createFirstViewController(), "表格", "bookmark", 0),
-            (createSecondViewController(), "集合", "clock", 1)
+        struct TabConfig {
+            let viewController: UIViewController
+            let title: String
+            let systemImageName: String
+            let tag: Int
+        }
+        let tabs: [TabConfig] = [
+            TabConfig(
+                viewController: MailSplitViewController(),
+                title: "邮件应用风格的 SplitViewController",
+                systemImageName: "clock",
+                tag: 0
+            ),
+            TabConfig(
+                viewController: createSecondViewController(),
+                title: "列表视图(纯代码版)",
+                systemImageName: "clock",
+                tag: 0
+            ),
+            TabConfig(
+                viewController: createFirstViewController(),
+                title: "列表视图(故事版)",
+                systemImageName: "bookmark",
+                tag: 1
+            )
         ]
         
-        // 2. 配置导航控制器
-        tabBarController.viewControllers = tabs.map { config in
-            let navController = UINavigationController(rootViewController: config.vc)
-            config.vc.tabBarItem = UITabBarItem(
-                title: config.title,
-                image: UIImage(systemName: config.iconName),
-                tag: config.tag
-            )
-            config.vc.navigationItem.title = config.title  // 同步导航栏标题
-            
-            configureGlobalNavigationBarAppearance(navi: navController)
-            return navController
+        // 2. 构建 NavigationController 包装的 VC
+        let viewControllers = tabs.map { config in
+            if config.viewController is UISplitViewController {
+                // SplitVC 不能包在 Nav 里，直接设置 tabBarItem
+                if let image = UIImage(systemName: config.systemImageName) {
+                    config.viewController.tabBarItem = UITabBarItem(
+                        title: config.title,
+                        image: image,
+                        tag: config.tag
+                    )
+                }else{
+                    config.viewController.tabBarItem = UITabBarItem(
+                        title: config.title,
+                        image: nil,
+                        tag: config.tag
+                    )
+                }
+                return config.viewController // 直接返回 SplitVC
+            } else {
+                let nav = UINavigationController(rootViewController: config.viewController)
+                // 确保 image 存在
+                if let image = UIImage(systemName: config.systemImageName) {
+                    // 设置 tabBarItem（注意：要设在 nav 上！）
+                    nav.tabBarItem = UITabBarItem(
+                                title: config.title,
+                                image: image,
+                                tag: config.tag
+                            )
+                } else {
+                    nav.tabBarItem = UITabBarItem(
+                                title: config.title,
+                                image: nil,
+                                tag: config.tag
+                            )
+                }
+
+                // 同步导航栏标题
+                config.viewController.navigationItem.title = config.title
+                configureGlobalNavigationBarAppearance(navi: nav)
+                return nav
+            }
         }
-        
+        tabBarController.viewControllers = viewControllers
+
         // 3. 全局TabBar样式配置
         configureGlobalTabBarAppearance()
 
-        
         return tabBarController
     }
 
     // MARK: - 子控制器创建
-    private func createFirstViewController() -> ModelListVC {
-        let vc = ModelListVC()
-        // 其他配置...
-        vc.setUpView(listTyple: .table)
-        return vc
+    private func createFirstViewController() -> UIViewController {
+        
+        let storyboardString = "DemoHomepage"//"HomePage"//"DemoHomepage"
+
+        // 更安全地获取初始 VC
+        guard let initialVC = UIStoryboard(name: storyboardString, bundle: nil).instantiateInitialViewController() else {
+            fatalError("❌ \(storyboardString).storyboard 缺少 Initial View Controller")
+        }
+        
+        // 如果是 UINavigationController，取其 root
+        if let nav = initialVC as? UINavigationController {
+            guard let root = nav.viewControllers.first else {
+                fatalError("❌ UINavigationController 在 \(storyboardString).storyboard 中没有 root view controller")
+            }
+            return root
+        }
+        return initialVC
     }
 
-    private func createSecondViewController() -> ModelListVC {
-        let vc = ModelListVC()
-        // 其他配置...
-        vc.setUpView(listTyple: .collection)
+    private func createSecondViewController() -> UIViewController {
+        let vc = DemoSelectedListTypeVC()
         return vc
     }
     
