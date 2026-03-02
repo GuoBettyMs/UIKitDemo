@@ -26,15 +26,23 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
             Log.debug("DemoTestVC viewWillAppear 中恢复状态")
             // 当从 CustomPickViewVC 返回时，显示导航栏
             navigationController?.navigationBar.isHidden = false
+            
+            if let window = UIApplication.shared.windows.first {
+                if #available(iOS 13.0, *) {
+                    window.overrideUserInterfaceStyle = .light
+                } else {
+                }
+            }
         }
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        Log.debug("DemoTestVC viewDidLoad, [\(selectedIndex)]title= \(String(describing: navigationItemTitle))")
+        Log.debug("DemoTestVC viewDidLoad, [\(selectedIndex)] title= \(String(describing: navigationItemTitle))")
         
         view.backgroundColor = .systemGreen
+        navigationController?.navigationBar.isHidden = false
         title = navigationItemTitle
 
         switch selectedIndex{
@@ -50,13 +58,24 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
             container.demo_circularProgressV()
             
         case 3:
-            //隐藏 DemoTestVC 导航栏
-            navigationController?.navigationBar.isHidden = true
-            container.scrollView.isHidden = true
-           
+            presentVC(ExpandableDecorationCollectionViewController())
             
         case 4:
-            setuptimeZonePickerData()
+            let preferredLang = Bundle.main.preferredLocalizations.first! as NSString
+            let languageCode = LanguageManager.currentLanguageCode
+            Log.debug("当前语言: \(preferredLang), 数字代码: \(languageCode)")
+            
+            CustomAlert.showCustomAlert(
+                on: self,
+                with: NSLocalizedString("当前语言: \(preferredLang), 数字代码: \(languageCode)\n 滑动选择时区", comment: ""),
+                cancelHandler: { [weak self] in
+                    Log.debug("用户点击了取消 - 执行 UIAlertAction 的取消逻辑")
+                    self?.setuptimeZonePickerData()
+                },
+                confirmHandler: { [weak self] in
+                    self?.setuptimeZonePickerData()
+                }
+            )
             
         case 5:
             //隐藏 DemoTestVC 导航栏
@@ -65,16 +84,12 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
            
             presentVC(CustomPickViewVC())
             
+        case 6:
+            setupSegmentedControl()
+            
         default: break
         }
         
-    }
-    
-    let referenceStyle: (UILabel) -> Void = { label in
-        label.textAlignment = .center
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 17, weight: .regular) // 确保字号/字重一致
-        label.backgroundColor = .clear
     }
     
     private func removePickerSelectionIndicator(_ pickerView: UIPickerView) {
@@ -148,6 +163,47 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
     }
 
     //MARK: - Actions
+    
+    //MARK: 多行文本分段控制器
+    private  func setupSegmentedControl() {
+        let titles = [
+            "推荐\n精选",
+            "最新\n动态",
+            "热门\n话题\n等等"
+        ]
+        
+        let multiLineSC = MultilineSegmentedControl(items: titles)
+        multiLineSC.translatesAutoresizingMaskIntoConstraints = false
+        multiLineSC.selectedSegmentIndex = 0
+        
+        // 添加事件
+        multiLineSC.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
+        
+        view.addSubview(multiLineSC)
+        let maxHeight = titles.map { calculateSegmentHeight(for: $0) }.max() ?? 80
+        NSLayoutConstraint.activate([
+            multiLineSC.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            multiLineSC.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            multiLineSC.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            multiLineSC.heightAnchor.constraint(equalToConstant: maxHeight)
+        ])
+    }
+    // 计算文字所需高度
+    private func calculateSegmentHeight(for title: String) -> CGFloat {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 13)
+        label.numberOfLines = 0
+        label.text = title
+        label.preferredMaxLayoutWidth = (UIScreen.main.bounds.width - 40)/3 - 20
+        return label.intrinsicContentSize.height + 20 // 加内边距
+    }
+
+    
+    @objc func segmentChanged(_ sender: MultilineSegmentedControl) {
+        let title = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
+        print("选中：\(title.replacingOccurrences(of: "\n", with: " "))")
+    }
+    
     //MARK: frameAndBouonds
     private func setupResetBtnEvent(){
         container.resetBtn.rx.tap
@@ -260,7 +316,6 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
         container.timeZonePicker.delegate = self
     }
     
-    // MARK: - Private Methods
     //MARK: frameAndBouonds
     private func updateResultLabel() {
 

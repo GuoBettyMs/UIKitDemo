@@ -70,11 +70,18 @@ extension DemoSelectedListTypeVC{
             vc.selectedIndex = indexPath.row
             vc.navigationItemTitle = model.cellTitleArr[indexPath.section][indexPath.row]
             vc.hidesBottomBarWhenPushed = true //是否自动隐藏底部标签栏
-            navigationController?.pushViewController(vc, animated: true)
+//            navigationController?.pushViewController(vc, animated: true)
+            
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .fullScreen
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.present(nav, animated: true)
+            }
 
         default: break
         }
-        print("section= \(indexPath.section), Cell clicked at row: \(indexPath.row), navigationItemTitle= \(model.cellTitleArr[indexPath.section][indexPath.row])")
+//        print("section= \(indexPath.section), Cell clicked at row: \(indexPath.row), navigationItemTitle= \(model.cellTitleArr[indexPath.section][indexPath.row])")
         tableView.deselectRow(at: indexPath, animated: true) // 取消选中
     }
 

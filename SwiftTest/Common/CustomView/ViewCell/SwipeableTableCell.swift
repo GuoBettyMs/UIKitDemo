@@ -30,20 +30,20 @@ class SwipeableTableCell: UITableViewCell {
     
     // MARK: - UIGestureRecognizerDelegate 协议中的方法
     
-    // 1. 过滤触摸：不让手势接收按钮的触摸
+    // 1. 过滤触摸：决定是否让手势识别器处理该触摸
     override func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                            shouldReceive touch: UITouch) -> Bool {
         // 如果触摸的是按钮，让按钮优先
         if touch.view is UIButton {
             return false
         }
-        return true
+        return true //接收触摸
     }
     
     // 2. 控制开始：只允许水平滑动
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         guard let pan = gestureRecognizer as? UIPanGestureRecognizer else {
-            return true
+            return true //允许开始
         }
         
         let velocity = pan.velocity(in: self)
@@ -64,7 +64,7 @@ class SwipeableTableCell: UITableViewCell {
         // 这样用户可以先滑动cell，如果滑不动再滚动tableView
         if otherGestureRecognizer is UIPanGestureRecognizer,
            let scrollView = otherGestureRecognizer.view as? UIScrollView {
-            return true
+            return true //同时识别
         }
         return false
     }

@@ -5,26 +5,8 @@
 //  Created by user on 2024/6/4.
 //
 
+
 import UIKit
-
-// 创建自定义 Segment 控件
-// Segment 文本可换行显示
-class MultilineSegmentedControl: UISegmentedControl {
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        for segment in subviews {
-            for subview in segment.subviews {
-                if let label = subview as? UILabel {
-                    label.numberOfLines = 0
-                    label.lineBreakMode = .byWordWrapping
-                    label.textAlignment = .center
-                }
-            }
-        }
-    }
-}
-
 
 //MARK: - 手势
 class IndexedTapGestureRecognizer: UITapGestureRecognizer {

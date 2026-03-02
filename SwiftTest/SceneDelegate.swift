@@ -47,21 +47,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         let tabs: [TabConfig] = [
             TabConfig(
-                viewController: MailSplitViewController(),
-                title: "邮件应用风格的 SplitViewController",
-                systemImageName: "clock",
+                viewController: createSecondViewController(),
+                title: "列表视图(纯代码版)",
+                systemImageName: "list.bullet.clipboard",
                 tag: 0
             ),
             TabConfig(
-                viewController: createSecondViewController(),
-                title: "列表视图(纯代码版)",
-                systemImageName: "clock",
+                viewController: MailSplitViewController(),
+                title: "邮件应用风格的 SplitViewController",
+                systemImageName: "antenna.radiowaves.left.and.right.circle",
                 tag: 0
             ),
             TabConfig(
                 viewController: createFirstViewController(),
                 title: "列表视图(故事版)",
-                systemImageName: "bookmark",
+                systemImageName: "list.bullet.clipboard",
                 tag: 1
             )
         ]

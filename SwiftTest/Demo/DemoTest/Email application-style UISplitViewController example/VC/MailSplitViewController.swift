@@ -3,7 +3,7 @@
 //  SwiftTest
 //
 //  Created by user on 2026/2/5.
-// 分割视图控制器
+// 分割视图控制器,⚠️ 使用 mac 运行会报 NavigationButtonBar 约束错误
 
 import UIKit
 

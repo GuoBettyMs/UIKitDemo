@@ -4,14 +4,17 @@
 //
 //  Created by user on 2026/2/5.
 //
-//详情视图控制器
+//详情视图控制器, 支持蓝牙连接
 
 import UIKit
+import CoreBluetooth
 
 class DetailViewController: UIViewController {
     
     private let titleLabel = UILabel()
     private let bodyLabel = UILabel()
+    
+    private var bleManager: BleManager? //蓝牙管理者
     
     var mailItem: MailItem? {
         didSet {
@@ -19,9 +22,37 @@ class DetailViewController: UIViewController {
         }
     }
     
+    // MARK: - Navigation Items (延迟设置以避免约束警告)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if navigationItem.rightBarButtonItems == nil {
+            setupNavigationBar()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+    }
+    
+    //MARK: -
+    
+    private func setupNavigationBar() {
+//        navigationItem.leftBarButtonItem = editButtonItem
+        
+//        let composeButton = UIBarButtonItem(
+//            barButtonSystemItem: .compose,
+//            target: self,
+//            action: #selector(composeMail)
+//        )
+        
+        let bleSearchButton = UIBarButtonItem(
+            barButtonSystemItem: .flexibleSpace,
+            target: self,
+            action: #selector(bleSearchEvent)
+        )
+        
+        navigationItem.rightBarButtonItems = [bleSearchButton]
     }
     
     private func setupUI() {
@@ -78,4 +109,39 @@ class DetailViewController: UIViewController {
         开发团队
         """
     }
+    
+    //MARK: - Actions
+    @objc private func bleSearchEvent() { /* 实现蓝牙逻辑 */
+        configureBle()
+    }
+    
+    private func configureBle(){
+        #if targetEnvironment(simulator)
+        // 使用模拟数据
+        bleManager = MockBleManager()
+        #else
+        // 使用真实蓝牙
+        bleManager = BleManager()
+        #endif
+
+        bleManager?.scanDelegate = self
+    }
+    
+}
+
+extension DetailViewController: ScanDelegate {
+    func scanMockData(_ peripheral: PeripheralType, _ broadcastPacket: BroadcastPacket, _ scanPacket: ScanPacket) {
+        print("scanMockData peripheral.name：\(peripheral.name ?? "Unknown")")
+        print("scanMockData RSSI: \(broadcastPacket.rssi ?? 0)")
+        print("scanMockData Scan Data: \(scanPacket.dataString)")
+    }
+    
+    func scanData(_ peripheral: CBPeripheral,
+                 _ broadcastPacket: BroadcastPacket,
+                 _ scanPacket: ScanPacket) {
+        print("scanData peripheral.name：\(peripheral.name ?? "Unknown")")
+        print("scanData RSSI: \(broadcastPacket.rssi ?? 0)")
+        print("scanData Scan Data: \(scanPacket.dataString)")
+    }
+    
 }

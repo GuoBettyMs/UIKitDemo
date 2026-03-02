@@ -27,7 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 return true
             }
             window.backgroundColor = .clear
-            window.rootViewController = NavigationController(rootViewController: ViewController())
+            window.rootViewController = NavigationController(rootViewController: DemoSelectedListTypeVC())
             window.makeKeyAndVisible()
             
             setupConstant(application)

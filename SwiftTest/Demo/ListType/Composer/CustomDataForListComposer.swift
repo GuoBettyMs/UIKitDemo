@@ -33,9 +33,10 @@ class CustomDataForListComposer {
                     "frame与Bounds的区别",
                     "编辑分享表格",
                     "镂空指示点的环形进度条",
-                    "自定义 section 装饰背景的集合视图+自动隐藏的按钮",
-                    "世界时区选择器",
+                    "带装饰的可展开/折叠 CollectionView",
+                    "世界时区选择器,自定义提示框",
                     "自定义滚轮+菜单跳转",
+                    "多行文本分段控制器"
                 ],
                 [
                     "Column Chart---柱状图",

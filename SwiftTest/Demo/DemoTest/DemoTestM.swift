@@ -19,17 +19,17 @@ struct TablePosition {
     var contentEndIndex: String.Index
 }
 
-//struct PowerData {
-//    var times: [String]
-//    var voltages: [Double]
-//    var currents: [Double]
-//    var powers: [Double]
-//}
-//
-//struct StudentData {
-//    var name: [String]
-//    var num: [Double]
-//}
+struct PortData {
+    var times: [String]
+    var voltages: [Double]
+    var currents: [Double]
+    var powers: [Double]
+}
+
+struct Student {
+    var name: [String]
+    var num: [Double]
+}
 
 class DemoTestM{
     
