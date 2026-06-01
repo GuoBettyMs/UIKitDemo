@@ -230,10 +230,8 @@ class WheelNumberPicker: UIView {
         }
         
         containerView.addSubview(separatorLabel)
-        separatorLabel.attributedText = bahnschrift_formatted(".")
         separatorLabel.textAlignment = .center
-//        separatorLabel.textColor = .white
-        separatorLabel.textColor = .white.withAlphaComponent(0.8)
+        separatorLabel.attributedText = formattedText1(".", isSelected: true)
 
         containerView.addSubview(leftPickVBg)
         leftPickVBg.axis = .horizontal
@@ -250,6 +248,7 @@ class WheelNumberPicker: UIView {
         updateLayoutForMaxValue()
     }
     
+
     private func createPickerView() -> UIPickerView {
 
         let pickerView = UIPickerView()
@@ -377,11 +376,13 @@ class WheelNumberPicker: UIView {
             for subview in pickerView.subviews {
                 // 移除UIPickerColumnView的背景
                 if let columnView = subview as? UICollectionView {
+                    Log.debug("找到疑似选中指示器: columnView")
                     columnView.backgroundColor = .clear
                 }
                 
                 // 移除UITableView的背景
                 if let tableView = subview as? UITableView {
+                    Log.debug("找到疑似选中指示器: UITableView")
                     tableView.backgroundColor = .clear
                     tableView.separatorStyle = .none
                 }
@@ -688,40 +689,73 @@ extension WheelNumberPicker: UIPickerViewDataSource, UIPickerViewDelegate {
         return calculateActualRow(from: scrollRow, forPickerTag: pickerView.tag)
     }
     
-    
+
     func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
 
         let containerView: UIView
         let label: UILabel
-          
+
         if let reused = view, let existingLabel = reused.subviews.first as? UILabel {
-              containerView = reused
-              label = existingLabel
-          } else {
-              containerView = UIView()
-              
-              label = UILabel()
-              label.textAlignment = .center
-              label.backgroundColor = .clear
-              label.translatesAutoresizingMaskIntoConstraints = false
-              containerView.addSubview(label)
-              NSLayoutConstraint.activate([
-                  label.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-                  label.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
-              ])
-          }
-
-          let actualRow = calculateActualRow(from: row, forPickerTag: pickerView.tag)
-          let selectedRow = pickerView.selectedRow(inComponent: component)
-          let actualSelectedRow = calculateActualRow(from: selectedRow, forPickerTag: pickerView.tag)
-          let isSelected = (actualRow == actualSelectedRow)
+          containerView = reused
+          label = existingLabel
+        } else {
+          containerView = UIView()
           
-          let text = "\(actualRow)"
-          let displayText = text == "1" ? "\u{200A}\(text)\u{200A}" : text
-          
-        label.attributedText = bahnschrift_formatted(displayText, 48)
-          return containerView
+          label = UILabel()
+          label.textAlignment = .center
+          label.backgroundColor = .clear
+          label.translatesAutoresizingMaskIntoConstraints = false
+          containerView.addSubview(label)
+          NSLayoutConstraint.activate([
+              label.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+              label.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+          ])
+        }
 
+        let actualRow = calculateActualRow(from: row, forPickerTag: pickerView.tag)
+        let selectedRow = pickerView.selectedRow(inComponent: component)
+        let actualSelectedRow = calculateActualRow(from: selectedRow, forPickerTag: pickerView.tag)
+        let isSelected = (actualRow == actualSelectedRow)
+
+        let text = "\(actualRow)"
+        let displayText = text == "1" ? "\u{200A}\(text)\u{200A}" : text
+        label.attributedText = formattedText1(displayText, isSelected: isSelected)
+        
+        return containerView
+
+    }
+    
+    func formattedText1(_ text: String, isSelected: Bool = false) -> NSMutableAttributedString {
+        
+        var font: UIFont
+        let bahnschriftFontName = getBahnschriftFontName(for: .regular)
+        
+        if let customFont = UIFont(name: bahnschriftFontName, size: 48) {
+            // 先尝试使用 Bahnschrift 字体
+            font = customFont
+//            Log.debug("formattedString, 3005 使用 Bahnschrift 字体: \(bahnschriftFontName)")
+        }else {
+            // 如果自定义字体不可用，使用系统字体
+            font = UIFont.systemFont(ofSize: 48, weight: .regular)
+//            Log.debug("formattedString, 3005 Bahnschrift 字体不可用，使用系统字体")
+        }
+        
+        let attributedString = NSMutableAttributedString(string: text)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 41.0
+        paragraphStyle.alignment = .center
+//                paragraphStyle.firstLineHeadIndent = 0.0 //设置首行缩进，向右偏移
+
+        let color: UIColor = .white//isSelected ? .white : UIColor(named: "DP_E6E6E6ff")! //.white
+
+        attributedString.addAttributes([
+            .font: font,
+            .paragraphStyle: paragraphStyle,
+            .baselineOffset: -2,
+            .foregroundColor: color // 设置前景色
+        ], range: NSRange(location: 0, length: text.count))
+        
+        return attributedString
     }
     
     func pickerView(_ pickerView: UIPickerView, rowHeightForComponent component: Int) -> CGFloat {

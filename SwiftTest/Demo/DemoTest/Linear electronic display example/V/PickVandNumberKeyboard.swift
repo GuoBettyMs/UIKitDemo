@@ -517,6 +517,8 @@ class PickVandNumberKeyboard: UIView{
             }
         }
         
+//        textfieldBgV.backgroundColor = UIColor(named: "DP_0B8CE8ff")
+        
         textfieldBgV.addSubview(pickValueBgV)
         pickValueBgV.snp.makeConstraints { make in
 //            make.height.equalTo(self.snp.width).multipliedBy(0.11) //40/375

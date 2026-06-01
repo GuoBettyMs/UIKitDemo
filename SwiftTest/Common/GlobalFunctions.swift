@@ -180,7 +180,7 @@ func bahnschrift_formatted(_ str: String, _ size: CGFloat = 20, weight: UIFont.W
 //        3005  - Bahnschrift_SemiLight-Condensed
 //        3005  - Bahnschrift_SemiBold-Condensed
 //        3005  - Bahnschrift_Bold-Condensed
-private func getBahnschriftFontName(for weight: UIFont.Weight) -> String {
+ func getBahnschriftFontName(for weight: UIFont.Weight) -> String {
     switch weight {
     case .ultraLight, .thin:
         return "Bahnschrift_Light"

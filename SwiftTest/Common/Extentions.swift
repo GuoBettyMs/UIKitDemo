@@ -23,6 +23,36 @@ extension CharacterSet {
     }
     
 }
+//MARK: - 扩展 UIImageView 添加 padding 属性
+extension UIImageView {
+    func setImageWithPadding(_ image: UIImage?, padding: CGFloat, backgroundColor: UIColor) {
+        self.image = image
+        self.backgroundColor = backgroundColor
+        self.contentMode = .center
+        
+        // 创建带内边距的容器
+        let containerView = UIView()
+        containerView.backgroundColor = .clear
+        containerView.isUserInteractionEnabled = false
+        
+        addSubview(containerView)
+        containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(padding)
+        }
+        
+        // 将图片移到容器中
+        if let image = image {
+            let imageView = UIImageView(image: image)
+            imageView.contentMode = .scaleAspectFit
+            containerView.addSubview(imageView)
+            imageView.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+        }
+    }
+}
+
+
 // MARK: -
 extension UIImage {
 

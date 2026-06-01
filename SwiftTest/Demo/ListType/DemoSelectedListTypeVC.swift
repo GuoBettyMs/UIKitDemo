@@ -10,6 +10,26 @@ import UIKit
 
 class DemoSelectedListTypeVC: ListTypeBasicViewcontroller {
 
+    // 在 viewWillAppear 中恢复状态
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // 从子视图返回时，显示导航栏
+        if ((navigationController?.navigationBar.isHidden) != nil) {
+            navigationController?.navigationBar.isHidden = false
+        }
+        
+        if let window = UIApplication.shared.windows.first {
+            if #available(iOS 13.0, *) {
+                if window.overrideUserInterfaceStyle != .unspecified {
+                    window.overrideUserInterfaceStyle = .unspecified
+                }
+            } else {
+            }
+        }
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         

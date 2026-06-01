@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import RxSwift
+import WebKit
 
 class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
     
@@ -17,24 +18,6 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
     var model = DemoTestM()
     
     //MARK: -
-    
-    // 在 viewWillAppear 中恢复状态
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        if selectedIndex == 5 {
-            Log.debug("DemoTestVC viewWillAppear 中恢复状态")
-            // 当从 CustomPickViewVC 返回时，显示导航栏
-            navigationController?.navigationBar.isHidden = false
-            
-            if let window = UIApplication.shared.windows.first {
-                if #available(iOS 13.0, *) {
-                    window.overrideUserInterfaceStyle = .light
-                } else {
-                }
-            }
-        }
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,6 +41,8 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
             container.demo_circularProgressV()
             
         case 3:
+            container.scrollView.isHidden = true
+
             presentVC(ExpandableDecorationCollectionViewController())
             
         case 4:
@@ -85,82 +70,40 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
             presentVC(CustomPickViewVC())
             
         case 6:
-            setupSegmentedControl()
+//            setupSegmentedControl()
             
+            let config = WKWebViewConfiguration()
+            let contentController = WKUserContentController()
+//            contentController.add(context.coordinator, name: "nativeBridge")
+            config.userContentController = contentController
+            
+            let webView = WKWebView(frame: .zero, configuration: config)
+            view.addSubview(webView)
+            webView.snp.makeConstraints { make in
+                make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(20)
+                make.left.right.bottom.equalToSuperview().inset(20)
+            }
+           
+            webView.backgroundColor = .random()
+            webView.scrollView.bounces = false
+            webView.scrollView.alwaysBounceVertical = false
+//            webView.navigationDelegate = context.coordinator
+            
+            let request = URLRequest(
+                url: URL(string: "https://www.isdt.co")!,
+                cachePolicy: .reloadIgnoringLocalCacheData,  // 忽略本地缓存
+                timeoutInterval: 10
+            )
+            
+            webView.load(request)
+            
+            
+//            URL(string: "https://szisd.com/weblink_test/bl8") ?? URL(string: "https://www.isdt.co")!
         default: break
         }
         
     }
-    
-    private func removePickerSelectionIndicator(_ pickerView: UIPickerView) {
-//        // 方法1：遍历并隐藏所有 UIImageView（选择指示器通常是 UIImageView）
-//        for subview in pickerView.subviews {
-//            if let imageView = subview as? UIImageView {
-//                imageView.isHidden = true
-//                imageView.alpha = 0
-//            }
-//        }
-        
-//        // 方法2：使用 KVC 移除选择指示器（如果上面方法无效）
-//        pickerView.subviews.forEach { subview in
-//            if subview.bounds.height <= 1.0 || subview.bounds.height >= pickerView.bounds.height - 2 {
-//                // 这很可能是选择指示器（高度很小或很大）
-//                subview.isHidden = true
-//                subview.alpha = 0
-//            }
-//        }
-//
-        // 方法3：iOS 14+ 的特殊处理
-        if #available(iOS 14.0, *) {
-            // 移除 selection overlay
-            pickerView.subviews.forEach { view in
-                if view.description.contains("UIPickerColumnView") {
-                    view.subviews.forEach { subview in
-                        if subview.description.contains("UIPickerColumnHeader") {
-                            subview.isHidden = true
-                        }
-                    }
-                }
-            }
-        }
-        
-        
-    }
-    // 递归查找并移除所有不需要的背景色
-    private func removePickerViewBackground(_ pickerView: UIPickerView) {
 
-//        // 递归设置所有视图为透明
-//        func makeTransparent(view: UIView) {
-//            view.backgroundColor = .clear
-//            view.isOpaque = false
-//            view.subviews.forEach { makeTransparent(view: $0) }
-//        }
-//
-//        makeTransparent(view: pickerView)
-        
-        func recursiveClearBackground(view: UIView) {
-            view.backgroundColor = .clear
-            view.subviews.forEach { recursiveClearBackground(view: $0) }
-        }
-        
-        pickerView.subviews.forEach { recursiveClearBackground(view: $0) }
-        
-        // 特殊处理：iOS 14+ 的 UIPickerView 结构
-        if #available(iOS 14.0, *) {
-            for subview in pickerView.subviews {
-                // 移除UIPickerColumnView的背景
-                if let columnView = subview as? UICollectionView {
-                    columnView.backgroundColor = .clear
-                }
-                
-                // 移除UITableView的背景
-                if let tableView = subview as? UITableView {
-                    tableView.backgroundColor = .clear
-                    tableView.separatorStyle = .none
-                }
-            }
-        }
-    }
 
     //MARK: - Actions
     
@@ -187,7 +130,9 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
             multiLineSC.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             multiLineSC.heightAnchor.constraint(equalToConstant: maxHeight)
         ])
+ 
     }
+    
     // 计算文字所需高度
     private func calculateSegmentHeight(for title: String) -> CGFloat {
         let label = UILabel()
@@ -201,7 +146,7 @@ class DemoTestVC: TestBaseVC<DemoTestV>, UITextViewDelegate, UIPickerViewDataSou
     
     @objc func segmentChanged(_ sender: MultilineSegmentedControl) {
         let title = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
-        print("选中：\(title.replacingOccurrences(of: "\n", with: " "))")
+        print("选中了第 \(sender.selectedSegmentIndex) 个：\(title.replacingOccurrences(of: "\n", with: " "))")
     }
     
     //MARK: frameAndBouonds

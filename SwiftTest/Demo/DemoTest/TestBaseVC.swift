@@ -35,6 +35,34 @@ class TestBaseVC<Container: UIView>: UIViewController {
         screen.edges = .right
         view.addGestureRecognizer(screen)
         
+        
+        // 添加回调
+        onDismiss = { [weak self] in
+            guard let self = self else { return }
+            
+            // 1. 如果当前控制器是导航控制器的根控制器，且该导航控制器是被 present 的
+            if let nav = self.navigationController,
+               nav.viewControllers.first == self,
+               nav.presentingViewController != nil {
+                Log.debug("是 present 进来的导航控制器（根控制器），执行 dismiss 关闭整个导航控制器")
+                nav.dismiss(animated: true)
+            }
+            // 2. 如果是 push 进来的（非根控制器）
+            else if let nav = self.navigationController, nav.viewControllers.contains(self) {
+                Log.debug("是 push 进来的，执行 pop 关闭 vc")
+                nav.popViewController(animated: true)
+            }
+            // 3. 如果是单独 present 的（没有导航控制器包装）
+            else if self.presentingViewController != nil {
+                Log.debug("是 present 进来的，执行 dismiss 关闭 vc")
+                self.dismiss(animated: true)
+            }
+            // 4. 无法确定
+            else {
+                Log.debug("无法确定呈现方式，不做任何操作")
+            }
+        }
+        
     }
     
     deinit {//对象销毁时彻底清理所有资源
@@ -80,25 +108,42 @@ class TestBaseVC<Container: UIView>: UIViewController {
     //MARK: -
     func presentVC(_ vc: UIViewController){
         
-        // 添加回调
-        onDismiss = { [weak self] in
-            Log.debug("vc 已关闭，自动返回")
-            self?.navigationController?.popViewController(animated: true)
-        }
-        
-        let nav = UINavigationController(rootViewController: vc)
+        let destVC = vc
+        let nav = UINavigationController(rootViewController: destVC)
         nav.modalPresentationStyle = .fullScreen
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+
+        // 获取当前控制器的 presenting 控制器
+        if let presentingVC = self.presentingViewController {
+            // 先关闭当前控制器，完成后再从 presenting 控制器上 present 新的导航控制器
+            self.dismiss(animated: false) {
+                print("先关闭当前控制器，完成后再从 presenting 控制器上 present 新的导航控制器")
+                presentingVC.present(nav, animated: true)
+            }
+        } else {
+            // 降级处理：直接 present（理论上不会走到这里）
+            print("降级处理：直接 present")
             self.present(nav, animated: true)
         }
+        
+//        // 添加回调
+//        onDismiss = { [weak self] in
+//            Log.debug("onDismiss, vc 已关闭，自动返回")
+//            self?.navigationController?.popViewController(animated: true)
+//        }
+//        
+//        let nav = UINavigationController(rootViewController: vc)
+//        nav.modalPresentationStyle = .fullScreen
+//        
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//            self.present(nav, animated: true)
+//        }
 
     }
     
     //MARK: -
     
     @objc private func goBack() {
-        dismiss(animated: true)
+        onDismiss?()
     }
     
     @objc func screenBack(screenEdgePan: UIScreenEdgePanGestureRecognizer) {

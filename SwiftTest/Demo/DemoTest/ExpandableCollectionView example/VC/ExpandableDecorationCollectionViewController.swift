@@ -16,7 +16,7 @@
 
 import UIKit
 
-class ExpandableDecorationCollectionViewController: UIViewController {
+class ExpandableDecorationCollectionViewController: TestBaseVC<UIView> {
     
     // MARK: - Properties
     
@@ -74,13 +74,12 @@ class ExpandableDecorationCollectionViewController: UIViewController {
     private func setupUI() {
         title = "带装饰的可展开/折叠 CollectionView"
         if #available(iOS 13.0, *) {
-            view.backgroundColor = .systemBackground
+            view.backgroundColor = .random()
         }
         
         view.addSubview(collectionView)
-        
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
@@ -213,27 +212,23 @@ class ExpandableDecorationCollectionViewController: UIViewController {
     }
     
     // MARK: - Toggle Section
-    
     private func toggleSection(at index: Int) {
+        // 1. 防抖：防止快速连续点击
+        guard !isProcessingToggle else { return }
+        isProcessingToggle = true
         
-        // 1. 先禁用重复点击（避免多次触发）
-                guard !isProcessingToggle else { return }
-                isProcessingToggle = true
+        // 2. 更新数据源（这是核心，Layout 会读取这个状态）
+        let isExpanding = !sections[index].isExpanded
+        sections[index].isExpanded = isExpanding
         
-        // 更新数据
-        sections[index].isExpanded.toggle()
-        
-        print("🔄 toggleSection at \(index), isExpanded: \(sections[index].isExpanded)")
-            
-        
-        // 获取section中所有item的indexPaths
+        // 3. 准备 Item 的 IndexPath
         let itemIndexPaths = sections[index].items.indices.map {
             IndexPath(item: $0, section: index)
         }
         
-        // 执行动画
+        // 4. 执行批量动画
         collectionView.performBatchUpdates {
-            if sections[index].isExpanded {
+            if isExpanding {
                 // 展开：插入items
                 collectionView.insertItems(at: itemIndexPaths)
             } else {
@@ -241,29 +236,27 @@ class ExpandableDecorationCollectionViewController: UIViewController {
                 collectionView.deleteItems(at: itemIndexPaths)
             }
         } completion: { [weak self] finished in
-//            
             guard let self = self else { return }
             
-            // 3. 动画完成后再更新UI和布局（核心：避免动画中刷新）
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // 等待动画完全结束
-                self.updateSectionHeader(at: index)
-                
-                // 仅刷新当前操作的分区，而非所有可见分区
-                if let layout = self.collectionView.collectionViewLayout as? SectionDecorationLayout {
-                    layout.refreshDecoration(for: index)
-                }
-                // 可以滚动到展开的section
-                if self.sections[index].isExpanded {
+            // 5. 动画结束后的处理
+            // 只需要更新 Header 的 UI（比如箭头方向），不需要刷新 Layout
+            self.updateSectionHeader(at: index)
+            
+            // ❌ 删除：layout.refreshDecoration(for: index)
+            // ❌ 删除：self.refreshVisibleSectionDecorations()
+            // 原因：performBatchUpdates 结束后，系统已经自动调用了 layoutIfNeeded，
+            // 只要 Layout 逻辑正确，背景会自动更新。
+            
+            if isExpanding {
+                // 稍微延迟一点滚动，确保布局已经稳定
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    //滚动到展开的section
                     self.scrollToSectionIfNeeded(at: index)
                 }
-                
-                // 解锁
-                self.isProcessingToggle = false
-                
-                // 刷新装饰视图
-                self.refreshVisibleSectionDecorations()
             }
             
+            // 7. 解锁
+            self.isProcessingToggle = false
         }
     }
     
@@ -271,41 +264,22 @@ class ExpandableDecorationCollectionViewController: UIViewController {
     private func refreshVisibleSectionDecorations() {
         guard let layout = collectionView.collectionViewLayout as? SectionDecorationLayout else { return }
         
-        // 修复1：获取所有分区（不仅是可见item的分区）
-        let allSections = Set(0..<sections.count)
-        // 同时获取可见item的分区（兜底）
-        let visibleItemSections = Set(collectionView.indexPathsForVisibleItems.map { $0.section })
-        let targetSections = allSections.union(visibleItemSections)
+        // 1. 仅获取可见区域的 Section，不要获取所有 Section (性能优化)
+        let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
+        let visibleSections = Set(collectionView.indexPathsForVisibleItems.map { $0.section })
         
-        // 修复2：主动重建装饰视图，而非仅刷新布局
-        for section in targetSections {
-            let decorationIndexPath = IndexPath(item: 0, section: section)
-            
-            // 步骤1：刷新布局属性
-            layout.refreshDecoration(for: section)
-            
-            // 步骤2：主动获取装饰视图并触发apply（核心修复）
-            if let decorationView = collectionView.supplementaryView(
-                forElementKind: SectionBackgroundReusableView.BACKGAROUND_CID,
-                at: decorationIndexPath
-            ), let attrs = layout.layoutAttributesForDecorationView(
-                ofKind: SectionBackgroundReusableView.BACKGAROUND_CID,
-                at: decorationIndexPath
-            ) as? SectionDecorationViewCollectionViewLayoutAttributes {
-                
-                // 强制重新应用属性
-                decorationView.apply(attrs)
-                // 强制重绘
-                decorationView.setNeedsDisplay()
-                decorationView.layer.setNeedsDisplay()
-            }
-        }
+        Log.debug("刷新可见分区: \(visibleSections), 可见区域: \(visibleRect)")
         
-        // 最终兜底刷新
+        // 2. 核心修复：不要 reload，而是标记布局失效
+        // 这会触发 layoutAttributesForElements 被调用，从而重新生成背景属性
+        layout.forceInvalidate()
+        
+        // 3. 强制 CollectionView 在下一次循环中重新布局
+        // 注意：不要在这里调用 layoutIfNeeded()，否则会阻塞主线程导致卡顿
         collectionView.collectionViewLayout.invalidateLayout()
-        collectionView.layoutIfNeeded()
     }
- 
+    
+
     private func updateSectionHeader(at index: Int) {
         // 更新section header的显示
         let header = collectionView.supplementaryView(
@@ -330,7 +304,7 @@ class ExpandableDecorationCollectionViewController: UIViewController {
             collectionView.scrollToItem(
                 at: IndexPath(item: 0, section: index),
                 at: .top,
-                animated: true
+                animated: false
             )
         }
     }

@@ -62,6 +62,7 @@ class CustomPickViewM{
     var curRealtimeStatus = false
     var hasClearedTrailingDigits = false // 添加属性来跟踪电压设定值是否已经清零过
     var hasClearedCurTrailingDigits = false // 添加属性来跟踪电流设定值是否已经清零过
+    var pickVTempValues = [0,0,0,0,0]
     
     var data_v = 0.0 //单位: V
     var dataVArr_new = [0,0,0,0,0]//总长度为 5（2位整数 + 1位小数点 + 2位小数）

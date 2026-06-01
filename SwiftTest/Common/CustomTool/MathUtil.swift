@@ -27,6 +27,17 @@ struct MathUtil {
 //        return formatted
 //    }
     
+    /// 返回数字的最高位
+    static func highestDigit(of value: Double) -> Int {
+        var n = Int(value)      // 取整
+        while n >= 10 {
+            n /= 10
+        }
+        return n
+    }
+
+  
+    
     // MARK: - Number Filtering
     
     static func filteredInt(from string: String) -> Int {

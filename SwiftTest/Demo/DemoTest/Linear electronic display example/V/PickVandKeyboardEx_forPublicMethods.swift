@@ -278,8 +278,8 @@ extension PickVandNumberKeyboard {
         case 0: //键盘
             textfield.isHidden = false
             pickV.isHidden = true
-//            setTextfieldAttributedText(text: setBtns[isVolSetting ? 0 : 1].getSetvalue())
-            setTextfieldAttributedText(text: "")
+            setTextfieldAttributedText(text: setBtns[isVolSetting ? 0 : 1].getSetvalue())
+//            setTextfieldAttributedText(text: "")
 
             rampAndRealBtn.snp.remakeConstraints { make in
                 make.width.equalToSuperview().multipliedBy(0.19) //66/351
@@ -339,8 +339,8 @@ extension PickVandNumberKeyboard {
             }
             textfieldUintL.attributedText = bahnschrift_formatted(textfieldUintL.text ?? "", 24, weight: .bold)
             
-//            //切换设置值
-//            pickV.currentValue = isVolSetting ? Double(setBtns[0].getSetvalue()) ?? 0 : Double(setBtns[1].getSetvalue()) ?? 0
+            //切换设置值
+            pickV.currentValue = isVolSetting ? Double(setBtns[0].getSetvalue()) ?? 0 : Double(setBtns[1].getSetvalue()) ?? 0
             
         default:
             break

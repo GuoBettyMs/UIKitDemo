@@ -99,7 +99,7 @@ class CustomPickViewVC: TestBaseVC<PickVandNumberKeyboard>{
             remoteControlTimeoutWorkItem = nil
         }
 
-        print("CustomPickViewVC 被释放") // 确认是否调用
+        print("CustomPickViewVC 执行 deinit") // 确认是否调用
     }
     
     //MARK: -
@@ -356,10 +356,7 @@ class CustomPickViewVC: TestBaseVC<PickVandNumberKeyboard>{
     private func backtoDemoTestVC(){
         //  先执行回调，再 dismiss
         onDismiss?()
-                        
-        dismiss(animated: true) {
-            Log.debug("CustomPickViewVC 已关闭")
-        }
+                    
     }
     
 }

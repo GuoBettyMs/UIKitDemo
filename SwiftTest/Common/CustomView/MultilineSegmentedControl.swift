@@ -4,208 +4,160 @@
 //
 //  Created by user on 2026/3/2.
 //
-// 多行文本分段控制器(默认 UISegmentedControl 的文字只能单行显示)
+// 支持多行文本的自定义分段控制器(默认 UISegmentedControl 的文字只能单行显示)
 
 import UIKit
 
+
 class MultilineSegmentedControl: UISegmentedControl {
     
-    // 数组顺序存储
-    private var labels: [UILabel?] = []
-    private var isConfiguring = false
+    // MARK: - 私有属性
+   
+    /// 用于承载自定义 Label 的透明容器
+    private let overlayView = UIView()
+    /// 存储自定义 Label 的数组
+    private var customLabels: [UILabel] = []
+    
+    // MARK: - 初始化
     
     override init(items: [Any]?) {
         super.init(items: items)
-        commonInit()
+        setupControl()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        commonInit()
+        setupControl()
     }
     
-    private func commonInit() {
-        addTarget(self, action: #selector(updateStyles), for: .valueChanged)
+    // MARK: - 设置与布局
+    private func setupControl() {
+        // 1. 隐藏系统原生文本（避免重影）
+        setTitleTextAttributes([.foregroundColor: UIColor.clear], for: .normal)
+        setTitleTextAttributes([.foregroundColor: UIColor.clear], for: .selected)
+
+        // 2. 彻底移除背景和分割线（关键步骤）
+        let transparentImage = UIImage()
+        setBackgroundImage(transparentImage, for: .normal, barMetrics: .default)
+        setBackgroundImage(transparentImage, for: .selected, barMetrics: .default)
+        setBackgroundImage(transparentImage, for: .highlighted, barMetrics: .default)
+        setDividerImage(transparentImage, forLeftSegmentState: .normal, rightSegmentState: .normal, barMetrics: .default)
+
+        // 3. 清除 tintColor（去掉边框颜色）
+        tintColor = .clear
+        backgroundColor = .clear
+        if #available(iOS 13.0, *) {
+            selectedSegmentTintColor = .clear
+        }
+
+        // 4. 移除系统胶囊视图（UILiquidLensView）
+        DispatchQueue.main.async {
+            for subview in self.subviews {
+                if String(describing: type(of: subview)).contains("LiquidLens") {
+                    subview.alpha = 0
+                    subview.isHidden = true
+                }
+            }
+        }
+
+        // 5. 自定义透明遮罩层
+        overlayView.isUserInteractionEnabled = false
+        overlayView.backgroundColor = .clear
+        addSubview(overlayView)
+
+        // 6. 监听事件
+        addTarget(self, action: #selector(updateLabelStyles), for: .valueChanged)
+
+        // 7. 延迟创建 Label，确保布局稳定
+        DispatchQueue.main.async {
+            self.createLabels()
+        }
+    }
+
+    /// 创建自定义 Label
+    private func createLabels() {
+        // 清空旧数据
+        customLabels.forEach { $0.removeFromSuperview() }
+        customLabels.removeAll()
+        
+        
+        for index in 0..<numberOfSegments {
+            // 获取标题（兼容 String 和 UIImage）
+            // 如果是字符串
+            if let title = titleForSegment(at: index) {
+                let label = UILabel()
+                label.text = title
+                label.numberOfLines = 0
+                label.lineBreakMode = .byWordWrapping
+                label.textAlignment = .center
+                label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+                label.isUserInteractionEnabled = false
+                
+                overlayView.addSubview(label)
+                customLabels.append(label)
+            }
+            // 如果是图片， UISegmentedControl 原生支持图片，
+            // 但如果是多行文本控件，通常只处理 String。
+            // 如果需要处理图片，可以在这里添加 UIImageView 的逻辑
+        }
+        
+        setNeedsLayout()
+        updateLabelStyles()
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        guard !isConfiguring else { return }
+        // 1. 确保遮罩层撑满整个控件
+        overlayView.frame = bounds
         
-        // 重新扫描并配置所有 Label
-        scanAndConfigureLabels()
-        updateStyles()
-    }
-    
-    private func scanAndConfigureLabels() {
-        // 重置 labels 数组
-        labels = Array(repeating: nil, count: numberOfSegments)
+        guard numberOfSegments > 0 else { return }
         
-        // 遍历所有子视图，找到所有 UILabel
-        var foundLabels: [UILabel] = []
-        
-        func findAllLabels(in view: UIView) {
-            for subview in view.subviews {
-                if let label = subview as? UILabel {
-                    foundLabels.append(label)
-                }
-                findAllLabels(in: subview)
-            }
-        }
-        
-        for subview in subviews {
-            findAllLabels(in: subview)
-        }
-        
-        // 根据标题内容匹配 Label 到对应的分段
-        for i in 0..<numberOfSegments {
-            guard let title = titleForSegment(at: i) else { continue }
-            
-            // 清理标题（移除换行符用于匹配）
-            let cleanTitle = title.replacingOccurrences(of: "\n", with: "")
-            
-            // 找到包含该标题的 Label
-            for label in foundLabels {
-                if let labelText = label.text,
-                   labelText.replacingOccurrences(of: "\n", with: "") == cleanTitle {
-                    labels[i] = label
-                    configureLabel(label, at: i)
-                    break
-                }
-            }
-        }
-    }
-    
-    private func configureLabel(_ label: UILabel, at index: Int) {
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
-        label.textAlignment = .center
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.8
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        
-        // 计算最大宽度
+        // 2. 计算每个 Segment 的宽度并布局 Label
         let segmentWidth = bounds.width / CGFloat(numberOfSegments)
-        label.preferredMaxLayoutWidth = segmentWidth - 16
         
-        // 强制重新布局
-        label.setNeedsLayout()
-        label.layoutIfNeeded()
+        for (index, label) in customLabels.enumerated() {
+            let x = CGFloat(index) * segmentWidth
+            // 这里的 height 暂时设为 bounds.height，后续会通过 intrinsicContentSize 自适应
+            label.frame = CGRect(x: x, y: 0, width: segmentWidth, height: bounds.height)
+            
+            // 3. 关键：设置 preferredMaxLayoutWidth 以支持自动换行计算高度
+            // 减去一点边距防止文字贴边
+            label.preferredMaxLayoutWidth = segmentWidth - 16
+            label.setNeedsLayout()
+            label.layoutIfNeeded()
+        }
+        
+        // 4. 根据内容调整控件高度 (可选，如果父视图依赖 intrinsicContentSize)
+        // 这里简单处理，通常由父视图的约束决定高度
     }
     
-    @objc private func updateStyles() {
+    // MARK: - 样式更新
+    
+    @objc private func updateLabelStyles() {
         let selectedIndex = selectedSegmentIndex
         
-        for (index, label) in labels.enumerated() {
-            guard let label = label else { continue }
-            
+        for (index, label) in customLabels.enumerated() {
             let isSelected = (index == selectedIndex)
             
-//            // 设置字体和颜色
-            //根据isSelected状态为 Label 设置粗体 / 常规体字体, 会出现单行或单行截断
-            label.textColor = isSelected ? .systemBlue : .darkGray
-            
+            // 使用动画让切换更平滑
+            UIView.animate(withDuration: 0.2) {
+                label.textColor = isSelected ? .systemBlue : .darkGray
+                label.font = isSelected ?
+                    UIFont.systemFont(ofSize: 14, weight: .bold) :
+                    UIFont.systemFont(ofSize: 14, weight: .regular)
+            }
         }
     }
+    
+    // MARK: - 重写 setTitle (防止外部调用导致状态不一致)
     
     override func setTitle(_ title: String?, forSegmentAt segment: Int) {
         super.setTitle(title, forSegmentAt: segment)
-        // 清除缓存，强制重新扫描
-        labels = []
-        setNeedsLayout()
+        // 如果外部修改了标题，需要同步修改我们的 Label
+        if segment < customLabels.count {
+            customLabels[segment].text = title
+            setNeedsLayout()
+        }
     }
 }
-
-
-
-//MARK: 完全自定义控件 SegmentedControl
-//class MultilineSegmentedControl: UIView {
-//    
-//    private var buttons: [UIButton] = []
-//    private let stackView = UIStackView()
-//    
-//    var selectedIndex: Int = 0 {
-//        didSet {
-//            updateButtonStyles()
-//        }
-//    }
-//    
-//    var titles: [String] = [] {
-//        didSet {
-//            setupButtons()
-//        }
-//    }
-//    
-//    var valueChangedHandler: ((Int) -> Void)?
-//    
-//    init(items: [String]) {
-//        self.titles = items
-//        super.init(frame: .zero)
-//        setupView()
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        super.init(coder: coder)
-//        setupView()
-//    }
-//    
-//    private func setupView() {
-//        stackView.axis = .horizontal
-//        stackView.distribution = .fillEqually
-//        stackView.spacing = 4
-//        stackView.translatesAutoresizingMaskIntoConstraints = false
-//        addSubview(stackView)
-//        
-//        NSLayoutConstraint.activate([
-//            stackView.topAnchor.constraint(equalTo: topAnchor),
-//            stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-//            stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-//            stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
-//        ])
-//        
-//        setupButtons()
-//    }
-//    
-//    private func setupButtons() {
-//        buttons.forEach { $0.removeFromSuperview() }
-//        buttons.removeAll()
-//        
-//        for (index, title) in titles.enumerated() {
-//            let button = UIButton(type: .custom)
-//            button.setTitle(title, for: .normal)
-//            button.titleLabel?.numberOfLines = 0
-//            button.titleLabel?.textAlignment = .center
-//            button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-//            button.backgroundColor = .lightGray
-//            button.layer.cornerRadius = 8
-//            button.tag = index
-//            button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
-//            
-//            buttons.append(button)
-//            stackView.addArrangedSubview(button)
-//        }
-//        
-//        updateButtonStyles()
-//    }
-//    
-//    private func updateButtonStyles() {
-//        for (index, button) in buttons.enumerated() {
-//            let isSelected = (index == selectedIndex)
-//            button.backgroundColor = isSelected ? .systemBlue : .lightGray
-//            button.setTitleColor(isSelected ? .white : .darkGray, for: .normal)
-//            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: isSelected ? .bold : .regular)
-//        }
-//    }
-//    
-//    @objc private func buttonTapped(_ sender: UIButton) {
-//        selectedIndex = sender.tag
-//        valueChangedHandler?(selectedIndex)
-//    }
-//    
-//    // 保持与 UISegmentedControl 相似的接口
-//    func titleForSegment(at index: Int) -> String? {
-//        guard index < titles.count else { return nil }
-//        return titles[index]
-//    }
-//}

@@ -24,10 +24,10 @@ class ExpandableSectionHeaderView: UICollectionReusableView {
             // Fallback on earlier versions
         }
         view.layer.cornerRadius = 12
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.1
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 4
+//        view.layer.shadowColor = UIColor.black.cgColor
+//        view.layer.shadowOpacity = 0.1
+//        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+//        view.layer.shadowRadius = 4
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()

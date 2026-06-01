@@ -485,9 +485,10 @@ extension CustomPickViewVC {
 //        menuBackgroundView.isHidden = true
 
         Log.debug("show User Manual")
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
-//            UIApplication.shared.open(URL(string: "https://isdt.co/down/pdf/MP305.pdf")!)
-//        })
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
+            //默认浏览器(如 safari )打开链接
+            UIApplication.shared.open(URL(string: "https://isdt.co/down/pdf/MP305.pdf")!)
+        })
        
 
     }
